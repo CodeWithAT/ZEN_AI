@@ -1,0 +1,228 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String          @id @default(uuid())
+  email         String          @unique
+  password      String
+  name          String
+  role          String          @default("RECRUITER")
+  avatar        String?
+  phone         String?
+  isActive      Boolean         @default(true)
+  isVerified    Boolean         @default(false)
+  companyId     String?
+  company       Company?        @relation(fields: [companyId], references: [id])
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  candidates    Candidate[]
+  jobs          Job[]
+  interviews    UserInterview[]
+  notifications Notification[]
+  activityLogs  ActivityLog[]
+}
+
+model Candidate {
+  id              String           @id @default(uuid())
+  name            String
+  email           String           @unique
+  phone           String?
+  resumeUrl       String?
+  linkedinUrl     String?
+  location        String?
+  currentJobTitle String?
+  experienceYears Int?
+  expectedSalary  Int?
+  availability    String?
+  status          String           @default("ACTIVE")
+  source          String?          
+  notes           String?
+  createdById     String
+  createdBy       User             @relation(fields: [createdById], references: [id])
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  skills          CandidateSkill[]
+  applications    Application[]
+  parsedData      String?          
+}
+
+model Job {
+  id               String        @id @default(uuid())
+  title            String
+  description      String
+  requirements     String
+  responsibilities String?
+  salaryMin        Int?
+  salaryMax        Int?
+  location         String
+  jobType          String
+  experienceLevel  String?
+  status           String        @default("DRAFT")
+  postedAt         DateTime?
+  closedAt         DateTime?
+  companyId        String
+  company          Company       @relation(fields: [companyId], references: [id])
+  createdById      String
+  createdBy        User          @relation(fields: [createdById], references: [id])
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  applications     Application[]
+  requiredSkills   JobSkill[]
+}
+
+model Application {
+  id              String      @id @default(uuid())
+  candidateId     String
+  candidate       Candidate   @relation(fields: [candidateId], references: [id])
+  jobId           String
+  job             Job         @relation(fields: [jobId], references: [id])
+  status          String      @default("APPLIED")
+  appliedAt       DateTime    @default(now())
+  matchScore      Float?      
+  matchReasoning  String?
+  notes           String?
+  rejectionReason String?
+  updatedAt       DateTime    @updatedAt
+
+  interviews      Interview[]
+
+  @@unique([candidateId, jobId])
+}
+
+model Interview {
+  id            String          @id @default(uuid())
+  applicationId String
+  application   Application     @relation(fields: [applicationId], references: [id])
+  scheduledAt   DateTime
+  duration      Int             
+  interviewType String
+  location      String?         
+  status        String          @default("SCHEDULED")
+  feedback      String?
+  rating        Int?            
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  interviewers  UserInterview[]
+}
+
+model UserInterview {
+  userId      String
+  interviewId String
+  user        User      @relation(fields: [userId], references: [id])
+  interview   Interview @relation(fields: [interviewId], references: [id])
+
+  @@id([userId, interviewId])
+}
+
+model Company {
+  id          String   @id @default(uuid())
+  name        String
+  industry    String?
+  website     String?
+  logoUrl     String?
+  description String?
+  address     String?
+  size        String?  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       User[]
+  jobs        Job[]
+  clients     Client[]
+}
+
+model Client {
+  id            String       @id @default(uuid())
+  companyName   String
+  contactName   String
+  email         String
+  phone         String?
+  industry      String?
+  status        String       @default("LEAD")
+  dealValue     Int?
+  stage         String?      
+  notes         String?
+  companyId     String?      // Made optional to prevent crashes
+  company       Company?     @relation(fields: [companyId], references: [id]) // Made optional
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+model Skill {
+  id          String           @id @default(uuid())
+  name        String           @unique
+  category    String?          
+  
+  candidates  CandidateSkill[]
+  jobs        JobSkill[]
+}
+
+model CandidateSkill {
+  id          String    @id @default(uuid())
+  candidateId String
+  candidate   Candidate @relation(fields: [candidateId], references: [id])
+  skillId     String
+  skill       Skill     @relation(fields: [skillId], references: [id])
+  proficiency Int?      
+
+  @@unique([candidateId, skillId])
+}
+
+model JobSkill {
+  id       String  @id @default(uuid())
+  jobId    String
+  job      Job     @relation(fields: [jobId], references: [id])
+  skillId  String
+  skill    Skill   @relation(fields: [skillId], references: [id])
+  required Boolean @default(true)
+
+  @@unique([jobId, skillId])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  type      String   
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+}
+
+model ActivityLog {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  action     String   
+  entityType String   
+  entityId   String
+  details    String?  
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+}
+
+// HRMS MODULE: Hired Candidates become Employees
+model Employee {
+  id          String   @id @default(uuid())
+  candidateId String?  @unique 
+  name        String
+  email       String   @unique
+  department  String
+  jobTitle    String
+  status      String   @default("ONBOARDING") 
+  joinDate    DateTime @default(now())
+  createdAt   DateTime @default(now())
+}
