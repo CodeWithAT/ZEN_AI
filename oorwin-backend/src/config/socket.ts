@@ -14,7 +14,7 @@ export const initSocket = (server: HttpServer) => {
     }
   });
 
-  io.on('connection', (socket) => {
+  io.on('connection', (socket: any) => {
     console.log(`🔌 New client connected: ${socket.id}`);
 
     // When a user logs in on the frontend, they emit 'register' with their User ID

@@ -1,0 +1,1 @@
+src/services/emailService.ts(1,24): error TS2307: Cannot find module 'nodemailer' or its corresponding type declarations.
