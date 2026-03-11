@@ -1,9 +1,12 @@
 import { Router } from 'express';
+// Use curly braces to import specific named exports
 import { register, login } from '../controllers/authController';
 
 const router = Router();
 
-// These names MUST match the exports in authController.ts
+// Ensure these functions are NOT undefined
+console.log("Auth Handlers:", { register, login }); 
+
 router.post('/register', register);
 router.post('/login', login);
 
