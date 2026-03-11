@@ -47,3 +47,28 @@ export const login = async (req: Request, res: Response) => {
     return res.status(500).json({ message: 'Login failed' });
   }
 };
+
+export const getMe = async (req: Request, res: Response) => {
+  try {
+    // req.user is set by authMiddleware
+    const userId = (req as any).user?.id || (req as any).user?.userId;
+    
+    if (!userId) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+
+    const user = await prisma.user.findUnique({ 
+      where: { id: userId },
+      select: { id: true, name: true, email: true }
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    return res.json({ user });
+  } catch (error) {
+    console.error('getMe error:', error);
+    return res.status(500).json({ message: 'Failed to fetch user data' });
+  }
+};

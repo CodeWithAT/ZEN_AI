@@ -21,7 +21,7 @@ export default function Register() {
       console.error("Full Backend Error:", error);
       
       // This will now show the EXACT error message coming from your Node.js backend
-      const errorMessage = error.response?.data?.error || error.message || "Registration failed";
+      const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || "Registration failed";
       alert(`❌ Error: ${errorMessage}`);
     } finally {
       setIsLoading(false);
