@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary-navy: #1a1f3a;
+  --color-secondary-purple: #2d1b4e;
+  --color-accent-purple: #8B5CF6;
+  --color-accent-pink: #EC4899;
+  --color-accent-blue: #5B73E8;
+  --color-bg-dark: #0f1221;
+  
+  /* Adding some custom gradients for easier use */
+  --background-image-hero-gradient: linear-gradient(to bottom, #1a1f3a, #2d1b4e);
+}
+
+body {
+  background-color: var(--color-bg-dark);
+  color: #e5e7eb; /* Light Gray */
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  overflow-x: hidden;
+}
