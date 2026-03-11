@@ -56,7 +56,7 @@ export const scheduleInterview = async (req: Request, res: Response, next: NextF
 // 2. Add Interview Feedback
 export const addFeedback = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const { feedback, rating, status } = req.body; // status: 'COMPLETED', etc.
 
     const interview = await prisma.interview.update({

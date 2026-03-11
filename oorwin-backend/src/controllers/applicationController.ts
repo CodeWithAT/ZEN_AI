@@ -29,7 +29,7 @@ export const createApplication = async (req: Request, res: Response, next: NextF
 // 2. Update Application Status (Drag & Drop)
 export const updateApplicationStatus = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const { status, rejectionReason } = req.body;
 
     const updatedApplication = await prisma.application.update({
@@ -52,7 +52,7 @@ export const updateApplicationStatus = async (req: Request, res: Response, next:
 // 3. Get Pipeline for Kanban Board
 export const getPipeline = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { jobId } = req.params;
+    const jobId = req.params.jobId as string;
 
     // Fetch all applications for this job
     const applications = await prisma.application.findMany({

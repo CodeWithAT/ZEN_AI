@@ -1,13 +1,13 @@
 import { Request, Response } from 'express';
 import prisma from '../config/database';
-import { parseResumeWithAI } from '../services/aiService';
+import { aiService } from '../services/aiService';
 
 export const uploadResume = async (req: Request, res: Response) => {
   try {
     if (!req.file) return res.status(400).json({ error: "No PDF file uploaded." });
 
     console.log("File received, sending to AI...");
-    const extractedData = await parseResumeWithAI(req.file.buffer);
+    const extractedData = await aiService.parseResumeWithAI(req.file.buffer);
     
     const recruiter = await prisma.user.findFirst(); 
     if (!recruiter) return res.status(400).json({ error: "No recruiter found in database. Please register a user first." });
@@ -96,7 +96,7 @@ export const matchCandidates = async (req: Request, res: Response) => {
 
 export const updateCandidateStatus = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const { status } = req.body;
     
     const updatedCandidate = await prisma.candidate.update({

@@ -1,0 +1,11 @@
+src/controllers/applicationController.ts(36,16): error TS2322: Type 'string | string[] | undefined' is not assignable to type 'string | (ApplicationCandidateIdJobIdCompoundUniqueInput & string) | undefined'.
+  Type 'string[]' is not assignable to type 'string | (ApplicationCandidateIdJobIdCompoundUniqueInput & string) | undefined'.
+    Type 'string[]' is not assignable to type 'ApplicationCandidateIdJobIdCompoundUniqueInput & string'.
+      Type 'string[]' is missing the following properties from type 'ApplicationCandidateIdJobIdCompoundUniqueInput': candidateId, jobId
+src/controllers/applicationController.ts(59,16): error TS2322: Type 'string | string[] | undefined' is not assignable to type 'string | StringFilter<"Application"> | undefined'.
+  Type 'string[]' is not assignable to type 'string | StringFilter<"Application"> | undefined'.
+src/controllers/candidateController.ts(3,10): error TS2305: Module '"../services/aiService"' has no exported member 'parseResumeWithAI'.
+src/controllers/candidateController.ts(103,16): error TS2322: Type 'string | string[] | undefined' is not assignable to type 'string | undefined'.
+  Type 'string[]' is not assignable to type 'string'.
+src/controllers/interviewController.ts(63,16): error TS2322: Type 'string | string[] | undefined' is not assignable to type 'string | undefined'.
+  Type 'string[]' is not assignable to type 'string'.

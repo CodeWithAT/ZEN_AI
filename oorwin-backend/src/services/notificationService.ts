@@ -6,7 +6,7 @@ export const notificationService = {
     try {
       // 1. Save to Database
       const notification = await prisma.notification.create({
-        data: { userId, type, title, message, link }
+        data: { userId, type, title, message, link: link || null }
       });
 
       // 2. Check if user is currently online
