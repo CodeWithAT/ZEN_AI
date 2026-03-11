@@ -1,54 +1,53 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import prisma from '../config/database';
+import { PrismaClient } from '@prisma/client';
 
-const generateToken = (userId: string) => {
-  return jwt.sign({ userId }, process.env.JWT_SECRET || 'your_super_secret_jwt_key_here', {
-    expiresIn: '7d',
-  });
-};
+const prisma = new PrismaClient();
+const JWT_SECRET = process.env.JWT_SECRET || 'your_fallback_secret';
 
 export const register = async (req: Request, res: Response) => {
-  const { email, password, name } = req.body;
   try {
-    const userExists = await prisma.user.findUnique({ where: { email } });
-    if (userExists) return res.status(400).json({ error: "User already exists" });
+    const { name, email, password } = req.body;
 
+    // 1. Check if user exists
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
+      return res.status(400).json({ message: 'User already exists' });
+    }
+
+    // 2. Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
+
+    // 3. Create user in Database
     const user = await prisma.user.create({
-      data: { email, password: hashedPassword, name }
+      data: { name, email, password: hashedPassword },
     });
 
-    res.status(201).json({ success: true, data: { id: user.id, name: user.name, email: user.email }, token: generateToken(user.id) });
+    // 4. Generate JWT
+    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
+
+    res.status(201).json({ token, user: { id: user.id, name: user.name, email: user.email } });
   } catch (error) {
-    res.status(500).json({ error: "Registration failed" });
+    console.error('Registration Error:', error);
+    res.status(500).json({ message: 'Registration failed internal server error' });
   }
 };
 
 export const login = async (req: Request, res: Response) => {
-  const { email, password } = req.body;
   try {
+    const { email, password } = req.body;
+
     const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) return res.status(401).json({ error: "Invalid email or password" });
+    if (!user) return res.status(404).json({ message: 'User not found' });
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(401).json({ error: "Invalid email or password" });
+    if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
-    res.json({ success: true, data: { id: user.id, name: user.name, email: user.email }, token: generateToken(user.id) });
-  } catch (error) {
-    res.status(500).json({ error: "Login failed" });
-  }
-};
+    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
 
-export const getMe = async (req: Request, res: Response) => {
-  try {
-    // @ts-ignore
-    const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
-    if (!user) return res.status(404).json({ error: "User not found" });
-    
-    res.json({ success: true, data: { id: user.id, name: user.name, email: user.email } });
+    res.json({ token, user: { id: user.id, name: user.name, email: user.email } });
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch user" });
+    res.status(500).json({ message: 'Login failed' });
   }
 };
