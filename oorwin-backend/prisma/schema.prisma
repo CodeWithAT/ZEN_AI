@@ -142,20 +142,20 @@ model Company {
 }
 
 model Client {
-  id            String       @id @default(uuid())
-  companyName   String
-  contactName   String
-  email         String
-  phone         String?
-  industry      String?
-  status        String       @default("LEAD")
-  dealValue     Int?
-  stage         String?      
-  notes         String?
-  companyId     String?      // Made optional to prevent crashes
-  company       Company?     @relation(fields: [companyId], references: [id]) // Made optional
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  id          String   @id @default(uuid())
+  companyName String
+  contactName String
+  email       String
+  phone       String?
+  industry    String?
+  status      String   @default("LEAD")
+  dealValue   Int?
+  stage       String?      
+  notes       String?
+  companyId   String?      
+  company     Company?     @relation(fields: [companyId], references: [id]) 
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 }
 
 model Skill {
@@ -214,7 +214,6 @@ model ActivityLog {
   createdAt  DateTime @default(now())
 }
 
-// HRMS MODULE: Hired Candidates become Employees
 model Employee {
   id          String   @id @default(uuid())
   candidateId String?  @unique 

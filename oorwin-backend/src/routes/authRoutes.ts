@@ -1,11 +1,10 @@
-import express from 'express';
-import { register, login, getMe } from '../controllers/authController';
-import { protect } from '../middleware/authMiddleware';
+import { Router } from 'express';
+import { register, login } from '../controllers/authController';
 
-const router = express.Router();
+const router = Router();
 
+// Named exports from the controller are mapped here
 router.post('/register', register);
 router.post('/login', login);
-router.get('/me', protect, getMe); // Used by React to keep you logged in on refresh
 
 export default router;

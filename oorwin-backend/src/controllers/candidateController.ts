@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
-import prisma from '../config/database';
+import { PrismaClient } from '@prisma/client';
 import { aiService } from '../services/aiService';
+
+const prisma = new PrismaClient();
 
 export const uploadResume = async (req: Request, res: Response) => {
   try {
@@ -9,14 +11,17 @@ export const uploadResume = async (req: Request, res: Response) => {
     console.log("File received, sending to AI...");
     const extractedData = await aiService.parseResumeWithAI(req.file.buffer);
     
+    // Check if we have at least one user to assign this candidate to
     const recruiter = await prisma.user.findFirst(); 
-    if (!recruiter) return res.status(400).json({ error: "No recruiter found in database. Please register a user first." });
+    if (!recruiter) {
+      return res.status(400).json({ error: "No user found. Please register an account first." });
+    }
 
-    // FIX: Handle duplicate emails so you can test the same resume multiple times without crashing!
     let finalEmail = extractedData.email || `extracted_${Date.now()}@example.com`;
+    
+    // Check for duplicates to avoid Prisma unique constraint errors
     const existingCandidate = await prisma.candidate.findUnique({ where: { email: finalEmail } });
     if (existingCandidate) {
-      // Append a timestamp to the email so it remains unique in SQLite
       finalEmail = `duplicate_${Date.now()}_${finalEmail}`;
     }
 
@@ -27,7 +32,7 @@ export const uploadResume = async (req: Request, res: Response) => {
         email: finalEmail,
         phone: extractedData.phone || null,
         currentJobTitle: extractedData.currentJobTitle || "Unspecified",
-        experienceYears: extractedData.experienceYears || 0,
+        experienceYears: Number(extractedData.experienceYears) || 0,
         status: "ACTIVE",
         createdById: recruiter.id, 
         parsedData: JSON.stringify(extractedData)
@@ -35,39 +40,41 @@ export const uploadResume = async (req: Request, res: Response) => {
     });
 
     console.log("✅ Candidate successfully saved!");
-    res.status(201).json({ success: true, data: newCandidate });
+    return res.status(201).json({ success: true, data: newCandidate });
     
   } catch (error: any) {
-    // FIX: We now log the exact error to the terminal AND send it to the frontend popup!
-    console.error("🔥 BACKEND CRASH:", error);
-    res.status(500).json({ error: error.message || "Database crashed while saving candidate." });
+    console.error("🔥 BACKEND ERROR:", error);
+    return res.status(500).json({ error: error.message || "Database error while saving candidate." });
   }
 };
 
 export const getCandidates = async (req: Request, res: Response) => {
   try {
-    const candidates = await prisma.candidate.findMany({ orderBy: { createdAt: 'desc' } });
-    res.json({ success: true, data: candidates });
+    const candidates = await prisma.candidate.findMany({ 
+      orderBy: { createdAt: 'desc' } 
+    });
+    return res.json({ success: true, data: candidates });
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch candidates" });
+    return res.status(500).json({ error: "Failed to fetch candidates" });
   }
 };
 
 export const searchCandidates = async (req: Request, res: Response) => {
   const { q } = req.query;
   try {
+    const query = String(q);
     const candidates = await prisma.candidate.findMany({
       where: {
         OR: [
-          { name: { contains: String(q) } },
-          { email: { contains: String(q) } }
+          { name: { contains: query, mode: 'insensitive' } },
+          { email: { contains: query, mode: 'insensitive' } }
         ]
       },
       orderBy: { createdAt: 'desc' }
     });
-    res.json({ success: true, data: candidates });
+    return res.json({ success: true, data: candidates });
   } catch (error) {
-    res.status(500).json({ error: "Search failed" });
+    return res.status(500).json({ error: "Search failed" });
   }
 };
 
@@ -88,9 +95,9 @@ export const matchCandidates = async (req: Request, res: Response) => {
     });
 
     matches.sort((a, b) => b.matchScore - a.matchScore);
-    res.json({ success: true, data: matches }); 
+    return res.json({ success: true, data: matches }); 
   } catch (error) {
-    res.status(500).json({ error: "AI Matching failed" });
+    return res.status(500).json({ error: "AI Matching failed" });
   }
 };
 
@@ -103,8 +110,8 @@ export const updateCandidateStatus = async (req: Request, res: Response) => {
       where: { id },
       data: { status }
     });
-    res.json({ success: true, data: updatedCandidate });
+    return res.json({ success: true, data: updatedCandidate });
   } catch (error) {
-    res.status(500).json({ error: "Failed to update status" });
+    return res.status(500).json({ error: "Failed to update status" });
   }
 };
