@@ -3,9 +3,7 @@ import api from '../api';
 import Sidebar from '../components/Sidebar';
 import { AuthContext } from '../context/AuthContext';
 import { 
-  Search, ChevronDown, Download, UserCheck, Bell, 
-  MessageSquare, Calendar, SlidersHorizontal, ArrowUpRight, 
-  ArrowDownRight, MoreHorizontal, X, Loader2, Building, CheckCircle2
+  Search, ChevronDown, Download, UserCheck, Bell, MessageSquare, Calendar, SlidersHorizontal, ArrowUpRight, ArrowDownRight, MoreHorizontal, X, Loader2, Building, CheckCircle2 
 } from 'lucide-react';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
@@ -15,20 +13,17 @@ export default function Hrms() {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(false);
   
-  // --- NEW: INTERACTIVE TOP NAV STATES ---
   const [currentOrg, setCurrentOrg] = useState('Main Organization');
   const [showOrgDropdown, setShowOrgDropdown] = useState(false);
   const [activeModal, setActiveModal] = useState(null); // 'message', 'meeting', or null
   const [heatmapData, setHeatmapData] = useState([]);
 
-  // Dynamic Date Calculation
   const currentDate = new Date();
   const currentMonthName = currentDate.toLocaleString('default', { month: 'short' });
   const currentYear = currentDate.getFullYear();
   const daysInMonth = new Date(currentYear, currentDate.getMonth() + 1, 0).getDate();
   const dateRangeString = `${currentMonthName} 1 - ${currentMonthName} ${daysInMonth}, ${currentYear}`;
 
-  // Filter & Pagination States
   const [searchQuery, setSearchQuery] = useState('');
   const [deptFilter, setDeptFilter] = useState('All Departments');
   const [statusFilter, setStatusFilter] = useState('All Status');
@@ -36,36 +31,27 @@ export default function Hrms() {
   const itemsPerPage = 8; 
 
   const [alerts, setAlerts] = useState([
-    { id: 1, title: "Pending leave approval", desc: "5 leave requests require your review", time: "2 hours ago", color: "border-emerald-500", action: "Review" }, 
-    { id: 2, title: "Probation ending soon", desc: "3 employees complete probation in 7 days", time: "5 hours ago", color: "border-rose-500", action: "Schedule Review" },
-    { id: 3, title: "Contract expiration", desc: "2 contracts expire within 30 days", time: "1 day ago", color: "border-blue-500", action: "View Details" }
+    { id: 1, title: "Pending leave approval", desc: "5 leave requests require your review", time: "2 hours ago", color: "#10b981", action: "Review" }, 
+    { id: 2, title: "Probation ending soon", desc: "3 employees complete probation in 7 days", time: "5 hours ago", color: "#ef4444", action: "Schedule Review" },
+    { id: 3, title: "Contract expiration", desc: "2 contracts expire within 30 days", time: "1 day ago", color: "#3b82f6", action: "View Details" }
   ]);
   const [showNotifications, setShowNotifications] = useState(false);
 
-  const dismissAlert = (id) => setAlerts(alerts.filter(alert => alert.id !== id));
-  const clearAllAlerts = () => setAlerts([]);
-
   useEffect(() => { 
     fetchEmployees(); 
-  }, [currentOrg]); // Re-fetch if organization changes
+  }, [currentOrg]);
 
   const fetchEmployees = async () => {
     setLoading(true);
     try { 
       const { data } = await api.get('/employees'); 
       setEmployees(data.data || []); 
-      
-      // Generate Dynamic Heatmap Data
-      const newHeatmap = Array.from({ length: 4 }, () => 
-        Array.from({ length: 5 }, () => Math.floor(Math.random() * (98 - 82 + 1) + 82))
-      );
+      const newHeatmap = Array.from({ length: 4 }, () => Array.from({ length: 5 }, () => Math.floor(Math.random() * 17) + 82));
       setHeatmapData(newHeatmap);
-
     } catch (error) { console.error("Failed to load employees:", error); } 
     finally { setLoading(false); }
   };
 
-  // FILTER LOGIC
   const filteredEmployees = employees.filter(emp => {
     const safeName = emp.name || "";
     const safeRole = emp.jobTitle || "";
@@ -73,44 +59,39 @@ export default function Hrms() {
     
     const matchesSearch = safeName.toLowerCase().includes(searchQuery.toLowerCase()) || safeRole.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesDept = deptFilter === 'All Departments' || safeDept === deptFilter;
-    const matchesStatus = statusFilter === 'All Status' || emp.status === statusFilter.toUpperCase();
+    const matchesStatus = statusFilter === 'All Status' || (emp.status || 'ACTIVE').toUpperCase() === statusFilter.toUpperCase();
     
     return matchesSearch && matchesDept && matchesStatus;
   });
 
-  // PAGINATION LOGIC
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentEmployees = filteredEmployees.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
 
-  const handleNextPage = () => { if (currentPage < totalPages) setCurrentPage(currentPage + 1); };
-  const handlePrevPage = () => { if (currentPage > 1) setCurrentPage(currentPage - 1); };
-
-  // CSV EXPORT LOGIC
   const handleExportCSV = () => {
     if (filteredEmployees.length === 0) return alert("No employees to export.");
     const headers = ["Employee ID,Name,Role,Department,Status,Join Date"];
-    const csvData = filteredEmployees.map(emp => `EMP-${emp.id?.substring(0,4) || '0000'},${emp.name},${emp.jobTitle},${emp.department},${emp.status},${new Date(emp.joinDate).toLocaleDateString()}`);
+    const csvData = filteredEmployees.map(emp => `EMP-${emp.id?.substring(0,4) || '0000'},${emp.name},${emp.jobTitle},${emp.department},${emp.status||'ACTIVE'},${new Date(emp.joinDate).toLocaleDateString()}`);
     const blob = new Blob([headers.concat(csvData).join("\n")], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a'); a.setAttribute('href', url); a.setAttribute('download', 'Oorwin_Employees.csv');
     a.click();
   };
 
-  // DYNAMIC CALCULATIONS
-  const totalHeadcount = employees.length > 0 ? employees.length : 0;
+  const totalHeadcount = employees.length;
   const activeToday = Math.floor(totalHeadcount * 0.94); 
   
   const calcDepts = () => {
-    if (employees.length === 0) return [{n: 'No Data', v: 0, p: '0%', c: 'bg-slate-300'}];
+    if (employees.length === 0) return [{n: 'No Data', v: 0, p: '0%', c: '#475569'}];
     const counts = employees.reduce((acc, emp) => { 
       const safeDept = emp.department || 'General';
       acc[safeDept] = (acc[safeDept] || 0) + 1; 
       return acc; 
     }, {});
+    const colors = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899'];
     return Object.entries(counts).map(([name, count], i) => ({ 
-      n: name, v: count, p: Math.round((count / employees.length) * 100) + '%', c: i % 2 === 0 ? 'bg-emerald-500' : 'bg-slate-400' 
+      n: name, v: count, p: Math.round((count / employees.length) * 100) + '%', c: colors[i % colors.length]
     })).sort((a,b) => b.v - a.v).slice(0, 5); 
   };
   const dynamicDepts = calcDepts();
@@ -133,357 +114,315 @@ export default function Hrms() {
   const calculateTenure = (joinDate) => {
     if (!joinDate) return "0.0";
     const diffTime = Math.abs(new Date() - new Date(joinDate));
-    const diffYears = diffTime / (1000 * 60 * 60 * 24 * 365.25);
-    return diffYears.toFixed(1);
+    return (diffTime / (1000 * 60 * 60 * 24 * 365.25)).toFixed(1);
   };
 
-  const attritionData = [{ month: 'Oct', v: 1.5, i: 0.5 }, { month: 'Nov', v: 2.4, i: 1.0 }, { month: 'Dec', v: 3.2, i: 1.1 }, { month: 'Jan', v: 2.8, i: 0.9 }, { month: 'Feb', v: 2.1, i: 0.7 }, { month: 'Mar', v: 2.2, i: 0.8 }];
-  
-  // Heatmap Color Logic
-  const getColor = (val) => { if (val >= 95) return 'bg-emerald-600 text-white'; if (val >= 90) return 'bg-emerald-400 text-white'; if (val >= 85) return 'bg-amber-300 text-amber-900'; return 'bg-rose-400 text-white'; };
+  const getColor = (val) => { if (val >= 95) return '#10b981'; if (val >= 90) return '#34d399'; if (val >= 85) return '#fcd34d'; return '#ef4444'; };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex font-sans text-slate-800 selection:bg-emerald-100">
-      
-      {/* --- ACTION MODALS --- */}
-      {activeModal === 'message' && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white p-6 rounded-2xl w-full max-w-lg shadow-2xl relative">
-            <button onClick={() => setActiveModal(null)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><X size={20} /></button>
-            <h2 className="text-lg font-bold mb-1">Unified Announcement</h2>
-            <p className="text-xs text-slate-500 mb-6">Send a broadcast message to all active employees.</p>
-            <form onSubmit={(e) => { e.preventDefault(); alert("Message broadcasted successfully!"); setActiveModal(null); }} className="flex flex-col gap-4">
-              <div><label className="text-xs font-bold text-slate-500 mb-1 block">Subject</label><input required placeholder="e.g., Q3 Townhall Update" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:border-emerald-500" /></div>
-              <div><label className="text-xs font-bold text-slate-500 mb-1 block">Message</label><textarea required rows="4" placeholder="Type your message here..." className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:border-emerald-500 resize-none"></textarea></div>
-              <button type="submit" className="w-full py-2.5 mt-2 bg-emerald-600 text-white font-bold rounded-lg shadow-md hover:bg-emerald-700 text-sm">Send Broadcast</button>
+    <div style={{ minHeight: '100vh', display: 'flex', background: '#080e1a', fontFamily: "'DM Sans', 'Segoe UI', sans-serif", color: '#f1f5f9', overflowX: 'hidden' }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: #0f172a; } ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+        input::placeholder { color: #475569; }
+        select option { background: #0f172a; color: #f1f5f9; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(18px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .row-hover:hover { background: rgba(255,255,255,0.025) !important; }
+        .card-hover:hover { transform: translateY(-4px) scale(1.02) !important; border-color: rgba(16,185,129,0.3) !important; }
+      `}</style>
+
+      {activeModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(2,6,23,0.85)', backdropFilter: 'blur(12px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ background: 'linear-gradient(160deg, #1a2234, #0f172a)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, padding: 36, width: '100%', maxWidth: 500, position: 'relative', boxShadow: '0 40px 80px rgba(0,0,0,0.6)', animation: 'fadeUp 0.35s ease' }}>
+            <button onClick={() => setActiveModal(null)} style={{ position: 'absolute', top: 20, right: 20, background: 'rgba(255,255,255,0.06)', border: 'none', borderRadius: 10, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#94a3b8' }}>
+              <X size={16} />
+            </button>
+            <div style={{ fontSize: 11, color: '#10b981', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>
+              {activeModal === 'message' ? 'Broadcast' : 'Calendar'}
+            </div>
+            <h2 style={{ fontSize: 24, fontWeight: 800, color: '#f1f5f9', fontFamily: "'Syne', sans-serif", marginBottom: 6 }}>
+              {activeModal === 'message' ? 'Unified Announcement' : 'Schedule Meeting'}
+            </h2>
+            <p style={{ fontSize: 13, color: '#64748b', marginBottom: 24 }}>
+              {activeModal === 'message' ? 'Send a broadcast message to all active employees.' : 'Create a calendar invite for specific departments.'}
+            </p>
+            <form onSubmit={e => { e.preventDefault(); alert('Action completed!'); setActiveModal(null); }} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {activeModal === 'message' ? (
+                <>
+                  <input required placeholder="Subject (e.g., Q3 Townhall Update)" style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '14px 16px', fontSize: 13, color: '#f1f5f9', outline: 'none' }} />
+                  <textarea required rows="4" placeholder="Type your message here..." style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '14px 16px', fontSize: 13, color: '#f1f5f9', outline: 'none', resize: 'none' }} />
+                  <button type="submit" style={{ padding: '14px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', boxShadow: '0 8px 24px rgba(16,185,129,0.3)', marginTop: 8 }}>Send Broadcast</button>
+                </>
+              ) : (
+                <>
+                  <input required placeholder="Meeting Title (e.g., Emergency Sync)" style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '14px 16px', fontSize: 13, color: '#f1f5f9', outline: 'none' }} />
+                  <div style={{ display: 'flex', gap: 16 }}>
+                    <input type="date" required style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '14px 16px', fontSize: 13, color: '#f1f5f9', outline: 'none' }} />
+                    <input type="time" required style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '14px 16px', fontSize: 13, color: '#f1f5f9', outline: 'none' }} />
+                  </div>
+                  <button type="submit" style={{ padding: '14px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', boxShadow: '0 8px 24px rgba(16,185,129,0.3)', marginTop: 8 }}>Send Invites</button>
+                </>
+              )}
             </form>
           </div>
         </div>
       )}
 
-      {activeModal === 'meeting' && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white p-6 rounded-2xl w-full max-w-lg shadow-2xl relative">
-            <button onClick={() => setActiveModal(null)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><X size={20} /></button>
-            <h2 className="text-lg font-bold mb-1">Schedule Meeting</h2>
-            <p className="text-xs text-slate-500 mb-6">Create a calendar invite for specific departments.</p>
-            <form onSubmit={(e) => { e.preventDefault(); alert("Meeting scheduled!"); setActiveModal(null); }} className="flex flex-col gap-4">
-              <div><label className="text-xs font-bold text-slate-500 mb-1 block">Meeting Title</label><input required placeholder="Emergency Sync" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:border-emerald-500" /></div>
-              <div className="grid grid-cols-2 gap-4">
-                <div><label className="text-xs font-bold text-slate-500 mb-1 block">Date</label><input type="date" required className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:border-emerald-500" /></div>
-                <div><label className="text-xs font-bold text-slate-500 mb-1 block">Time</label><input type="time" required className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:border-emerald-500" /></div>
-              </div>
-              <button type="submit" className="w-full py-2.5 mt-2 bg-emerald-600 text-white font-bold rounded-lg shadow-md hover:bg-emerald-700 text-sm">Send Invites</button>
-            </form>
-          </div>
-        </div>
-      )}
-
+      {/* Global Sidebar Component */}
       <Sidebar />
-      
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* INTERACTIVE HEADER */}
-        <header className="h-16 border-b border-slate-200 flex items-center justify-between px-6 bg-white shrink-0 z-20">
-          <div className="flex items-center gap-6">
-            
-            {/* WORKING DROPDOWN */}
-            <div className="relative">
-              <button onClick={() => setShowOrgDropdown(!showOrgDropdown)} className="flex items-center gap-2 text-xs font-semibold text-slate-700 bg-white border border-slate-200 px-3 py-1.5 rounded shadow-sm hover:bg-slate-50 transition-colors">
-                {currentOrg} <ChevronDown size={14}/>
+
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <header style={{ height: 62, borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 28px', background: 'rgba(8,14,26,0.95)', backdropFilter: 'blur(20px)', position: 'sticky', top: 0, zIndex: 50, flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div style={{ position: 'relative' }}>
+              <button onClick={() => setShowOrgDropdown(!showOrgDropdown)} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '8px 14px', fontSize: 12, fontWeight: 600, color: '#cbd5e1', cursor: 'pointer' }}>
+                {currentOrg} <ChevronDown size={12} />
               </button>
               {showOrgDropdown && (
-                <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-slate-200 rounded-lg shadow-lg py-1 z-50">
+                <div style={{ position: 'absolute', top: 44, left: 0, width: 220, background: '#0f172a', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, overflow: 'hidden', zIndex: 200, boxShadow: '0 24px 60px rgba(0,0,0,0.5)' }}>
                   {['Main Organization', 'Branch Office 1', 'Branch Office 2', 'Europe Division'].map(org => (
-                    <div key={org} onClick={() => { setCurrentOrg(org); setShowOrgDropdown(false); }} className={`px-4 py-2 text-xs cursor-pointer hover:bg-emerald-50 ${currentOrg === org ? 'text-emerald-600 font-bold' : 'text-slate-700'}`}>
+                    <div key={org} onClick={() => { setCurrentOrg(org); setShowOrgDropdown(false); }} style={{ padding: '12px 16px', fontSize: 12, cursor: 'pointer', color: currentOrg === org ? '#10b981' : '#94a3b8', fontWeight: currentOrg === org ? 700 : 500, borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                       {org}
                     </div>
                   ))}
                 </div>
               )}
             </div>
-
-            {/* DYNAMIC DATE */}
-            <div className="flex items-center gap-2 text-xs text-slate-500 font-medium hidden md:flex bg-slate-50 px-3 py-1.5 rounded border border-slate-100">
-              <Calendar size={14} className="text-slate-400"/> {dateRangeString}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '8px 14px', fontSize: 11, color: '#64748b', fontWeight: 500 }}>
+              <Calendar size={12} color="#64748b" /> {dateRangeString}
             </div>
           </div>
 
-          <div className="flex items-center gap-6">
-            <div className="relative w-[250px] hidden md:block">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input type="text" placeholder="Global search..." className="w-full pl-9 pr-4 py-1.5 bg-slate-50 border border-slate-200 rounded-md text-xs outline-none focus:border-emerald-500" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div style={{ position: 'relative' }}>
+              <Search size={13} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#475569' }} />
+              <input type="text" placeholder="Search employees..." style={{ width: 240, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '8px 14px 8px 36px', fontSize: 12, color: '#f1f5f9', outline: 'none' }} />
             </div>
-            
-            <div className="relative cursor-pointer" onClick={() => setShowNotifications(!showNotifications)}>
-              <Bell size={18} className="text-slate-600 hover:text-emerald-600" />
-              {alerts.length > 0 && <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>}
-              
+            <div style={{ position: 'relative' }}>
+              <button onClick={() => setShowNotifications(!showNotifications)} style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b', position: 'relative' }}>
+                <Bell size={15} />
+                {alerts.length > 0 && <span style={{ position: 'absolute', top: 8, right: 8, width: 6, height: 6, borderRadius: '50%', background: '#ef4444', border: '1.5px solid #080e1a' }} />}
+              </button>
               {showNotifications && (
-                <div className="absolute right-0 mt-4 w-80 bg-white rounded-xl shadow-2xl border border-slate-200 z-50 overflow-hidden cursor-default" onClick={e => e.stopPropagation()}>
-                  <div className="bg-slate-50 p-4 border-b border-slate-100 flex justify-between">
-                    <h4 className="font-bold text-slate-800">Alerts</h4>
-                    <span className="text-xs text-emerald-600 cursor-pointer hover:underline" onClick={clearAllAlerts}>Clear All</span>
+                <div style={{ position: 'absolute', right: 0, top: 46, width: 320, background: '#0f172a', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, boxShadow: '0 24px 60px rgba(0,0,0,0.5)', zIndex: 200, overflow: 'hidden' }}>
+                  <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: '#f1f5f9' }}>Alerts</span>
+                    <span onClick={() => setAlerts([])} style={{ fontSize: 11, color: '#10b981', cursor: 'pointer', fontWeight: 600 }}>Clear All</span>
                   </div>
-                  {alerts.map((a) => (
-                    <div key={a.id} className={`p-4 border-b border-slate-100 border-l-4 ${a.color} relative group`}>
-                      <button onClick={() => dismissAlert(a.id)} className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 text-slate-400 hover:text-rose-500 transition-opacity"><X size={14}/></button>
-                      <h4 className="text-xs font-bold text-slate-900 pr-6">{a.title}</h4>
-                      <p className="text-[11px] text-slate-500 mt-1">{a.desc}</p>
+                  {alerts.map(a => (
+                    <div key={a.id} style={{ padding: '14px 18px', borderBottom: '1px solid rgba(255,255,255,0.04)', borderLeft: `3px solid ${a.color}`, display: 'flex', gap: 12 }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: '#cbd5e1' }}>{a.title}</div>
+                        <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>{a.desc}</div>
+                      </div>
+                      <button onClick={() => setAlerts(p => p.filter(x => x.id !== a.id))} style={{ background: 'none', border: 'none', color: '#475569', cursor: 'pointer' }}><X size={12} /></button>
                     </div>
                   ))}
-                  {alerts.length === 0 && <p className="text-xs text-center py-6 text-slate-400">No new notifications</p>}
+                  {alerts.length === 0 && <div style={{ padding: '30px 0', textAlign: 'center', fontSize: 12, color: '#475569' }}>No pending alerts.</div>}
                 </div>
               )}
             </div>
-
-            <div className="flex items-center gap-2 border-l border-slate-200 pl-6">
-              <div className="text-right hidden md:block">
-                <p className="text-xs font-bold text-slate-800 leading-tight">{user?.name || 'Recruiter'}</p>
-                <p className="text-[10px] text-slate-500 leading-tight">System Admin</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingLeft: 16, borderLeft: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#f1f5f9' }}>{user?.name || 'Recruiter'}</div>
+                <div style={{ fontSize: 10, color: '#475569' }}>System Admin</div>
               </div>
-              <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold text-sm border border-emerald-200 uppercase">
+              <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'linear-gradient(135deg, #064e3b, #065f46)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: '#10b981', border: '1.5px solid rgba(16,185,129,0.3)', fontFamily: "'Syne', sans-serif" }}>
                 {user?.name?.charAt(0) || 'U'}
               </div>
             </div>
           </div>
         </header>
 
-        <div className="p-6 flex-1 overflow-y-auto">
-          <div className="max-w-[1600px] mx-auto flex flex-col xl:flex-row gap-6">
+        <div style={{ flex: 1, padding: 28, overflowY: 'auto' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 1600, margin: '0 auto' }}>
             
-            {/* LEFT WIDE COLUMN */}
-            <div className="flex-1 flex flex-col gap-6">
-              
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-                <div>
-                  <h2 className="text-xl font-bold text-slate-900">Intelligence Dashboard</h2>
-                  <p className="text-xs text-slate-500 mt-1">Real-time HR analytics for <span className="font-bold text-emerald-600">{currentOrg}</span></p>
-                </div>
-                <div className="flex gap-3 mt-4 sm:mt-0">
-                  <button onClick={() => setActiveModal('message')} className="flex items-center gap-2 text-xs font-medium text-slate-700 bg-white border border-slate-200 px-3 py-1.5 rounded shadow-sm hover:bg-slate-50">
-                    <MessageSquare size={14} className="text-slate-400"/> Unified message
-                  </button>
-                  <button onClick={() => setActiveModal('meeting')} className="flex items-center gap-2 text-xs font-medium text-white bg-emerald-600 border border-emerald-700 px-3 py-1.5 rounded shadow-sm hover:bg-emerald-700">
-                    <Calendar size={14}/> Schedule meeting
-                  </button>
-                </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', animation: 'fadeUp 0.3s ease' }}>
+              <div>
+                <h1 style={{ fontSize: 26, fontWeight: 800, fontFamily: "'Syne', sans-serif", color: '#f1f5f9', letterSpacing: '-0.03em' }}>Intelligence Dashboard</h1>
+                <p style={{ fontSize: 13, color: '#64748b', marginTop: 6 }}>Real-time HR analytics for <span style={{ color: '#10b981', fontWeight: 700 }}>{currentOrg}</span></p>
               </div>
-
-              {/* KPI ROW 1 (Live DB Connection) */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Headcount</p>
-                  <div className="flex items-end gap-2 mb-2">
-                    <h3 className="text-4xl font-bold text-slate-800">{totalHeadcount}</h3>
-                    <span className="flex items-center text-xs font-bold text-emerald-500 mb-1"><ArrowUpRight size={14}/> Live DB</span>
-                  </div>
-                  <p className="text-xs text-slate-400">Total active in database</p>
-                </div>
-                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Active Today</p>
-                  <div className="flex items-end gap-2 mb-2">
-                    <h3 className="text-4xl font-bold text-slate-800">{activeToday}</h3>
-                    <span className="flex items-center text-xs font-bold text-emerald-500 mb-1"><ArrowUpRight size={14}/> 5%</span>
-                  </div>
-                  <p className="text-xs text-slate-400">94% attendance rate</p>
-                </div>
-                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Absentee Rate</p>
-                  <div className="flex items-end gap-2 mb-2">
-                    <h3 className="text-4xl font-bold text-slate-800">6.5%</h3>
-                    <span className="flex items-center text-xs font-bold text-emerald-500 mb-1"><ArrowDownRight size={14}/> 2%</span>
-                  </div>
-                  <p className="text-xs text-slate-400">Below target threshold</p>
-                </div>
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button onClick={() => setActiveModal('message')} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '10px 18px', fontSize: 13, fontWeight: 600, color: '#cbd5e1', cursor: 'pointer', transition: 'all 0.2s' }}>
+                  <MessageSquare size={14} color="#64748b" /> Unified message
+                </button>
+                <button onClick={() => setActiveModal('meeting')} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: 10, padding: '10px 18px', fontSize: 13, fontWeight: 700, color: '#fff', cursor: 'pointer', boxShadow: '0 4px 16px rgba(16,185,129,0.3)', transition: 'all 0.2s' }}>
+                  <Calendar size={14} /> Schedule meeting
+                </button>
               </div>
+            </div>
 
-              {/* MIDDLE ROW */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                  <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-sm font-bold text-slate-800">Workforce Composition (Live)</h3>
-                    <MoreHorizontal size={16} className="text-slate-400"/>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 18, animation: 'fadeUp 0.4s ease' }}>
+              {[
+                { label: 'Total Headcount', value: totalHeadcount, sub: 'Total active in database', isLive: true },
+                { label: 'Active Today', value: activeToday, sub: '94% attendance rate', up: true, diff: '5%' },
+                { label: 'Absentee Rate', value: '4.2%', sub: 'Below target threshold', up: false, diff: '2%' }
+              ].map((kpi, i) => (
+                <div key={i} className="card-hover" style={{ background: 'linear-gradient(135deg, #1e293b, #0f172a)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 20, padding: 24, transition: 'all 0.4s' }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>{kpi.label}</div>
+                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12, marginBottom: 8 }}>
+                    <div style={{ fontSize: 36, fontWeight: 800, fontFamily: "'Syne', sans-serif", color: '#f1f5f9', letterSpacing: '-0.02em', lineHeight: 1 }}>{kpi.value}</div>
+                    {kpi.isLive ? (
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color: '#10b981', marginBottom: 4 }}><ArrowUpRight size={13} /> Live DB</span>
+                    ) : (
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color: '#10b981', marginBottom: 4 }}>{kpi.up ? <ArrowUpRight size={13} /> : <ArrowDownRight size={13} />} {kpi.diff}</span>
+                    )}
                   </div>
-                  <div className="flex flex-col gap-5 mb-8">
-                    {dynamicDepts.map(dept => (
-                      <div key={dept.n}>
-                        <div className="flex justify-between text-xs mb-1.5 font-medium">
-                          <span className="text-slate-700">{dept.n}</span>
-                          <div className="flex gap-4"><span className="text-slate-800">{dept.v}</span><span className="text-slate-400 w-8 text-right">{dept.p}</span></div>
-                        </div>
-                        <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden"><div className={`h-full ${dept.c}`} style={{width: dept.p}}></div></div>
+                  <div style={{ fontSize: 12, color: '#475569' }}>{kpi.sub}</div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, animation: 'fadeUp 0.45s ease' }}>
+              <div style={{ background: 'linear-gradient(135deg, #1a2234, #0f172a)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 20, padding: 24 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                  <h3 style={{ fontSize: 15, fontWeight: 700, color: '#f1f5f9', fontFamily: "'Syne', sans-serif" }}>Workforce Composition (Live)</h3>
+                  <MoreHorizontal size={18} color="#475569" />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                  {dynamicDepts.map(dept => (
+                    <div key={dept.n}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 600, color: '#cbd5e1', marginBottom: 8 }}>
+                        <span>{dept.n}</span>
+                        <div style={{ display: 'flex', gap: 16 }}><span>{dept.v}</span><span style={{ color: '#64748b', width: 30, textAlign: 'right' }}>{dept.p}</span></div>
                       </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* DYNAMIC HEATMAP */}
-                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                  <div className="flex justify-between items-center mb-6">
-                    <div>
-                      <h3 className="text-sm font-bold text-slate-800">Attendance Pattern</h3>
-                      <p className="text-[10px] text-slate-400 mt-0.5">Weekly distribution (%)</p>
+                      <div style={{ width: '100%', background: 'rgba(255,255,255,0.04)', height: 6, borderRadius: 6, overflow: 'hidden' }}>
+                        <div style={{ height: '100%', background: dept.c, width: dept.p, borderRadius: 6, transition: 'width 1s ease' }} />
+                      </div>
                     </div>
-                    <MoreHorizontal size={16} className="text-slate-400"/>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <div className="grid grid-cols-6 gap-2 text-center text-[10px] font-medium text-slate-400 mb-1"><div></div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div></div>
-                    {heatmapData.map((week, i) => (
-                      <div key={i} className="grid grid-cols-6 gap-2 items-center">
-                        <div className="text-[10px] text-slate-400 font-medium">Week {i+1}</div>
-                        {week.map((val, j) => <div key={j} className={`h-10 rounded flex items-center justify-center text-xs font-bold ${getColor(val)}`}>{val}</div>)}
-                      </div>
-                    ))}
-                  </div>
+                  ))}
                 </div>
               </div>
 
-              {/* DYNAMIC PAYROLL CHART */}
-              <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                <div className="mb-6">
-                  <h3 className="text-sm font-bold text-slate-800">Payroll Intelligence (Calculated from DB)</h3>
-                  <p className="text-[10px] text-slate-400 mt-0.5">Allocations based on hired employee departments</p>
-                </div>
-                
-                <div className="flex flex-wrap gap-12 mb-8">
-                  <div><p className="text-[10px] font-bold text-slate-400 mb-1">Total Payroll</p><h3 className="text-xl font-bold text-slate-800">${grandTotal}K</h3></div>
-                  <div><p className="text-[10px] font-bold text-slate-400 mb-1">Base Salary</p><h3 className="text-xl font-bold text-slate-800">${totalBase}K</h3></div>
-                  <div><p className="text-[10px] font-bold text-slate-400 mb-1">Benefits</p><h3 className="text-xl font-bold text-slate-800">${totalBen}K</h3></div>
-                </div>
-
-                <div className="h-[250px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={dynamicPayrollData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10}} dy={10} />
-                      <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10}} tickFormatter={(v)=>`$${v}K`} />
-                      <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '12px' }} />
-                      <Bar dataKey="base" name="Base Salary" fill="#475569" radius={[2, 2, 0, 0]} barSize={24} />
-                      <Bar dataKey="ben" name="Benefits" fill="#10b981" radius={[2, 2, 0, 0]} barSize={24} />
-                      <Bar dataKey="ot" name="Overtime" fill="#cbd5e1" radius={[2, 2, 0, 0]} barSize={24} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-
-              {/* PERFECT EMPLOYEE DATA TABLE */}
-              <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden mb-10">
-                <div className="p-5 border-b border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div style={{ background: 'linear-gradient(135deg, #1a2234, #0f172a)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 20, padding: 24 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
                   <div>
-                    <h3 className="text-sm font-bold text-slate-800">Employee Directory</h3>
-                    <p className="text-[10px] text-slate-500 mt-0.5">Showing {currentEmployees.length} of {filteredEmployees.length} matching records</p>
+                    <h3 style={{ fontSize: 15, fontWeight: 700, color: '#f1f5f9', fontFamily: "'Syne', sans-serif" }}>Attendance Pattern</h3>
+                    <p style={{ fontSize: 11, color: '#475569', marginTop: 4 }}>Weekly distribution (%)</p>
                   </div>
-                  <div className="flex items-center gap-3 w-full md:w-auto">
-                    <div className="relative flex-1 md:w-56">
-                      <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                      <input 
-                        type="text" 
-                        placeholder="Search name, role..." 
-                        value={searchQuery}
-                        onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                        className="w-full pl-8 pr-4 py-1.5 border border-slate-200 rounded text-xs outline-none focus:border-emerald-500" 
-                      />
-                    </div>
-                    <select value={deptFilter} onChange={(e) => { setDeptFilter(e.target.value); setCurrentPage(1); }} className="text-xs border border-slate-200 rounded py-1.5 px-2 outline-none cursor-pointer bg-white">
-                      <option>All Departments</option>
-                      <option>Engineering</option><option>Marketing</option><option>Sales</option><option>Design</option><option>General</option>
-                    </select>
-                    <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }} className="text-xs border border-slate-200 rounded py-1.5 px-2 outline-none cursor-pointer bg-white">
-                      <option>All Status</option><option value="ONBOARDING">Onboarding</option><option value="ACTIVE">Active</option>
-                    </select>
-                    <button onClick={handleExportCSV} className="flex items-center gap-2 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded hover:bg-emerald-100 transition-colors"><Download size={14}/> Export</button>
+                  <MoreHorizontal size={18} color="#475569" />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'minmax(40px,1fr) repeat(5, 1fr)', gap: 10, textAlign: 'center', fontSize: 11, fontWeight: 600, color: '#64748b', paddingBottom: 6 }}>
+                    <div /><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div>
                   </div>
-                </div>
-                
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="bg-white text-[10px] font-bold text-slate-500 border-b border-slate-200">
-                        <th className="p-4 py-3">Employee ID</th><th className="p-4 py-3">Name</th><th className="p-4 py-3">Role</th>
-                        <th className="p-4 py-3">Department</th><th className="p-4 py-3">Attendance</th><th className="p-4 py-3">Performance</th>
-                        <th className="p-4 py-3">Tenure</th><th className="p-4 py-3">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 text-xs">
-                      {loading ? (
-                         <tr><td colSpan="8" className="p-10 text-center"><Loader2 size={24} className="animate-spin mx-auto text-emerald-500" /></td></tr>
-                      ) : currentEmployees.length === 0 ? (
-                        <tr><td colSpan="8" className="p-10 text-center text-slate-400">No matching employees. Check your filters.</td></tr>
-                      ) : (
-                        currentEmployees.map((emp, i) => {
-                          const safeName = emp.name || "Unknown";
-                          const attendance = 85 + (safeName.length % 12); 
-                          const performance = 98 - (safeName.length % 8); 
-                          const tenure = calculateTenure(emp.joinDate);
-                          
-                          let statusTag = <span className="px-2 py-0.5 text-[10px] rounded border border-slate-200 bg-slate-50 text-slate-600 font-medium">Unknown</span>;
-                          if (emp.status === "ONBOARDING") statusTag = <span className="px-2 py-0.5 text-[10px] rounded border border-amber-200 bg-amber-50 text-amber-600 font-medium">Onboarding</span>;
-                          if (emp.status === "ACTIVE" || !emp.status) statusTag = <span className="px-2 py-0.5 text-[10px] rounded border border-emerald-200 bg-emerald-50 text-emerald-600 font-medium">Active</span>;
-
-                          return (
-                            <tr key={emp.id} className="hover:bg-slate-50/50 transition-colors">
-                              <td className="p-4 py-3 text-slate-500 font-mono text-[11px]">EMP-{emp.id?.substring(0,4).toUpperCase() || '0000'}</td>
-                              <td className="p-4 py-3 font-bold text-slate-800">{safeName}</td>
-                              <td className="p-4 py-3 text-slate-500">{emp.jobTitle || 'N/A'}</td>
-                              <td className="p-4 py-3 text-slate-500">{emp.department || 'N/A'}</td>
-                              <td className="p-4 py-3">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-12 bg-slate-100 h-1.5 rounded-full overflow-hidden"><div className="h-full bg-emerald-500" style={{width: `${attendance}%`}}></div></div>
-                                  <span className="font-bold text-slate-700 text-[10px]">{attendance}%</span>
-                                </div>
-                              </td>
-                              <td className="p-4 py-3 font-bold text-slate-800">{performance}</td>
-                              <td className="p-4 py-3 text-slate-500">{tenure} yrs</td>
-                              <td className="p-4 py-3">{statusTag}</td>
-                            </tr>
-                          );
-                        })
-                      )}
-                    </tbody>
-                  </table>
-                  
-                  {/* REAL PAGINATION */}
-                  <div className="p-4 border-t border-slate-200 flex justify-between items-center text-[10px] text-slate-500 bg-slate-50/50">
-                    <span>Showing {filteredEmployees.length > 0 ? indexOfFirstItem + 1 : 0} to {Math.min(indexOfLastItem, filteredEmployees.length)} of {filteredEmployees.length} entries</span>
-                    <div className="flex gap-1">
-                      <button onClick={handlePrevPage} disabled={currentPage === 1} className="px-3 py-1 bg-white border border-slate-200 rounded hover:bg-slate-50 disabled:opacity-50 transition-colors">Previous</button>
-                      <button onClick={handleNextPage} disabled={currentPage >= totalPages || totalPages === 0} className="px-3 py-1 bg-white border border-slate-200 rounded hover:bg-slate-50 disabled:opacity-50 transition-colors">Next</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* RIGHT COLUMN (INTERACTIVE ALERTS) */}
-            <div className="w-full xl:w-[320px] flex flex-col gap-6">
-              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden sticky top-6">
-                <div className="p-5 border-b border-slate-100">
-                  <h3 className="text-sm font-bold text-slate-800">Alerts & Actions</h3>
-                  <p className="text-[10px] text-slate-400 mt-0.5">{alerts.length} items require attention</p>
-                </div>
-                <div className="flex flex-col p-4 gap-4">
-                  {alerts.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-8 text-slate-400">
-                      <CheckCircle2 size={32} className="mb-2 text-emerald-500" />
-                      <p className="text-xs">All caught up! No active alerts.</p>
-                    </div>
-                  ) : (
-                    alerts.map((alert) => (
-                      <div key={alert.id} className={`pl-3 border-l-2 ${alert.color} relative group`}>
-                        <button onClick={() => dismissAlert(alert.id)} className="absolute -right-2 -top-2 opacity-0 group-hover:opacity-100 text-slate-400 hover:text-rose-500 transition-opacity"><X size={14}/></button>
-                        <div className="flex justify-between items-start mb-0.5">
-                          <h4 className="text-xs font-bold text-slate-800 pr-4">{alert.title}</h4>
-                          <span className="text-[9px] text-slate-400 shrink-0">{alert.time}</span>
+                  {heatmapData.map((week, i) => (
+                    <div key={i} style={{ display: 'grid', gridTemplateColumns: 'minmax(40px,1fr) repeat(5, 1fr)', gap: 10, alignItems: 'center' }}>
+                      <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>Wk {i+1}</div>
+                      {week.map((val, j) => (
+                        <div key={j} style={{ height: 38, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, background: getColor(val) + '20', color: getColor(val), border: `1px solid ${getColor(val)}30` }}>
+                          {val}
                         </div>
-                        <p className="text-[10px] text-slate-500 mb-1.5 leading-snug pr-4">{alert.desc}</p>
-                        <button onClick={() => dismissAlert(alert.id)} className="text-[10px] font-semibold text-emerald-600 hover:text-emerald-700 transition-colors">{alert.action}</button>
-                      </div>
-                    ))
-                  )}
+                      ))}
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
 
+            <div style={{ background: 'linear-gradient(135deg, #1a2234, #0f172a)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 20, padding: 24, animation: 'fadeUp 0.5s ease' }}>
+              <div style={{ marginBottom: 28 }}>
+                <h3 style={{ fontSize: 15, fontWeight: 700, color: '#f1f5f9', fontFamily: "'Syne', sans-serif" }}>Payroll Intelligence</h3>
+                <p style={{ fontSize: 11, color: '#475569', marginTop: 4 }}>Allocations based on hired employee departments</p>
+              </div>
+              <div style={{ display: 'flex', gap: 48, marginBottom: 36 }}>
+                <div><div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Total Payroll</div><div style={{ fontSize: 24, fontWeight: 800, fontFamily: "'Syne', sans-serif", color: '#f1f5f9' }}>${grandTotal}K</div></div>
+                <div><div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Base Salary</div><div style={{ fontSize: 24, fontWeight: 800, fontFamily: "'Syne', sans-serif", color: '#f1f5f9' }}>${totalBase}K</div></div>
+                <div><div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Benefits</div><div style={{ fontSize: 24, fontWeight: 800, fontFamily: "'Syne', sans-serif", color: '#f1f5f9' }}>${totalBen}K</div></div>
+              </div>
+              <div style={{ height: 260, width: '100%' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={dynamicPayrollData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.03)" />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#475569', fontSize: 11 }} dy={10} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#475569', fontSize: 11 }} tickFormatter={v => `$${v}K`} />
+                    <Tooltip cursor={{ fill: 'rgba(255,255,255,0.02)' }} contentStyle={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, fontSize: 12 }} />
+                    <Bar dataKey="base" name="Base Salary" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={28} />
+                    <Bar dataKey="ben" name="Benefits" fill="#10b981" radius={[4, 4, 0, 0]} barSize={28} />
+                    <Bar dataKey="ot" name="Overtime" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={28} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div style={{ background: 'linear-gradient(135deg, #1a2234, #0f172a)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 20, overflow: 'hidden', animation: 'fadeUp 0.55s ease' }}>
+              <div style={{ padding: '24px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <h3 style={{ fontSize: 15, fontWeight: 700, color: '#f1f5f9', fontFamily: "'Syne', sans-serif" }}>Employee Directory</h3>
+                  <p style={{ fontSize: 11, color: '#475569', marginTop: 4 }}>Showing {currentEmployees.length} of {filteredEmployees.length} matching records</p>
+                </div>
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <div style={{ position: 'relative' }}>
+                    <Search size={13} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#475569' }} />
+                    <input type="text" placeholder="Search name, role..." value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }} style={{ width: 220, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '8px 12px 8px 34px', fontSize: 12, color: '#f1f5f9', outline: 'none' }} />
+                  </div>
+                  <select value={deptFilter} onChange={e => { setDeptFilter(e.target.value); setCurrentPage(1); }} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '8px 14px', fontSize: 12, color: '#cbd5e1', outline: 'none', cursor: 'pointer' }}>
+                    <option>All Departments</option><option>Engineering</option><option>Marketing</option><option>Sales</option><option>Design</option><option>General</option>
+                  </select>
+                  <select value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setCurrentPage(1); }} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '8px 14px', fontSize: 12, color: '#cbd5e1', outline: 'none', cursor: 'pointer' }}>
+                    <option>All Status</option><option value="ONBOARDING">Onboarding</option><option value="ACTIVE">Active</option>
+                  </select>
+                  <button onClick={handleExportCSV} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '8px 16px', fontSize: 12, fontWeight: 600, color: '#cbd5e1', cursor: 'pointer', transition: 'all 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = '#10b981'} onMouseLeave={e => e.currentTarget.style.color = '#cbd5e1'}><Download size={14} /> Export</button>
+                </div>
+              </div>
+              
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                  <thead>
+                    <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                      {['Employee ID', 'Name', 'Role', 'Department', 'Attendance', 'Performance', 'Tenure', 'Status'].map(h => (
+                        <th key={h} style={{ padding: '14px 24px', fontSize: 10, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loading ? (
+                      <tr><td colSpan="8" style={{ padding: '60px 0', textAlign: 'center' }}><Loader2 size={24} color="#10b981" /></td></tr>
+                    ) : currentEmployees.length === 0 ? (
+                      <tr><td colSpan="8" style={{ padding: '60px 0', textAlign: 'center', fontSize: 13, color: '#475569' }}>No matching employees.</td></tr>
+                    ) : (
+                      currentEmployees.map(emp => {
+                        const att = 85 + ((emp.name?.length || 5) % 12); 
+                        const perf = 98 - ((emp.name?.length || 5) % 8); 
+                        const s = (emp.status || 'ACTIVE').toUpperCase();
+                        const tagCfg = s === 'ONBOARDING' ? { bg: '#f59e0b20', col: '#f59e0b', label: 'Onboarding' } : { bg: '#10b98120', col: '#10b981', label: 'Active' };
+                        return (
+                          <tr key={emp.id} className="row-hover" style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', transition: 'background 0.2s' }}>
+                            <td style={{ padding: '16px 24px', fontSize: 11, fontFamily: 'monospace', color: '#64748b' }}>EMP-{emp.id?.substring(0,4).toUpperCase() || '0000'}</td>
+                            <td style={{ padding: '16px 24px', fontSize: 13, fontWeight: 700, color: '#f1f5f9' }}>{emp.name || 'Unknown'}</td>
+                            <td style={{ padding: '16px 24px', fontSize: 12, color: '#cbd5e1' }}>{emp.jobTitle || 'N/A'}</td>
+                            <td style={{ padding: '16px 24px', fontSize: 12, color: '#cbd5e1' }}>{emp.department || 'N/A'}</td>
+                            <td style={{ padding: '16px 24px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                <div style={{ width: 60, height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden' }}>
+                                  <div style={{ width: `${att}%`, height: '100%', background: '#10b981', borderRadius: 2 }} />
+                                </div>
+                                <span style={{ fontSize: 11, fontWeight: 700, color: '#cbd5e1' }}>{att}%</span>
+                              </div>
+                            </td>
+                            <td style={{ padding: '16px 24px', fontSize: 12, fontWeight: 700, color: '#f1f5f9' }}>{perf}</td>
+                            <td style={{ padding: '16px 24px', fontSize: 12, color: '#cbd5e1' }}>{calculateTenure(emp.joinDate)} yrs</td>
+                            <td style={{ padding: '16px 24px' }}>
+                              <span style={{ padding: '4px 10px', borderRadius: 6, fontSize: 10, fontWeight: 700, background: tagCfg.bg, color: tagCfg.col, border: `1px solid ${tagCfg.col}40` }}>{tagCfg.label}</span>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              <div style={{ padding: '16px 24px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, color: '#64748b' }}>
+                <span>Showing {filteredEmployees.length > 0 ? indexOfFirstItem + 1 : 0} to {Math.min(indexOfLastItem, filteredEmployees.length)} of {filteredEmployees.length} entries</span>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)} style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: currentPage === 1 ? '#475569' : '#cbd5e1', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}>Previous</button>
+                  <button disabled={currentPage >= totalPages || totalPages === 0} onClick={() => setCurrentPage(currentPage + 1)} style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: currentPage >= totalPages || totalPages === 0 ? '#475569' : '#cbd5e1', cursor: currentPage >= totalPages || totalPages === 0 ? 'not-allowed' : 'pointer' }}>Next</button>
+                </div>
+              </div>
+            </div>
+            
           </div>
         </div>
       </div>
