@@ -295,17 +295,7 @@ export default function Crm() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', background: '#080e1a', fontFamily: "'DM Sans', 'Segoe UI', sans-serif", color: '#f1f5f9', overflowX: 'hidden' }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap');
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: #0f172a; } ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
-        input::placeholder { color: #475569; }
-        @keyframes slideIn { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
-        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
-        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
-        .glow-dot { animation: pulse 2s infinite; }
-      `}</style>
+      {/* Global CSS handled in index.css */}
 
       {notification && (
         <div style={{

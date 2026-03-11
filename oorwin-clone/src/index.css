@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap');
 
 @theme {
   --color-primary-navy: #1a1f3a;
@@ -15,6 +16,34 @@
 body {
   background-color: var(--color-bg-dark);
   color: #e5e7eb; /* Light Gray */
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: 'DM Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   overflow-x: hidden;
 }
+
+h1, h2, h3, h4, h5, h6, .font-syne {
+  font-family: 'Syne', sans-serif;
+}
+
+/* Global App Styles */
+* { box-sizing: border-box; }
+::-webkit-scrollbar { width: 4px; } 
+::-webkit-scrollbar-track { background: #0f172a; } 
+::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+input::placeholder { color: #475569; }
+select option { background: #0f172a; color: #f1f5f9; }
+
+/* Animations used in new UI */
+@keyframes fadeUp { from { opacity: 0; transform: translateY(18px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes slideIn { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes slideInDown { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+/* Utility Classes */
+.spin { animation: spin 1s linear infinite; }
+.pulse, .glow-dot { animation: pulse 2s ease-in-out infinite; }
+.card-hover:hover { transform: translateY(-4px) scale(1.02) !important; border-color: rgba(16,185,129,0.3) !important; }
+.row-hover:hover { background: rgba(255,255,255,0.025) !important; }
+.job-hover:hover { border-color: rgba(16,185,129,.3) !important; background: rgba(16,185,129,.04) !important; }

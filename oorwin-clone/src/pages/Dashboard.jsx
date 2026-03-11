@@ -156,22 +156,7 @@ export default function Dashboard() {
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", background: "#080e1a", fontFamily: "'DM Sans', sans-serif", color: "#f1f5f9", overflowX: "hidden" }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap');
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: #0f172a; } ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
-        input::placeholder { color: #475569; }
-        select option { background: #0f172a; color: #f1f5f9; }
-        @keyframes fadeUp   { from { opacity:0; transform:translateY(18px) scale(.97); } to { opacity:1; transform:translateY(0) scale(1); } }
-        @keyframes slideIn  { from { opacity:0; transform:translateY(-14px); } to { opacity:1; transform:translateY(0); } }
-        @keyframes spin     { to { transform:rotate(360deg); } }
-        @keyframes pulse    { 0%,100%{opacity:1} 50%{opacity:.4} }
-        .spin  { animation: spin  1s linear infinite; }
-        .pulse { animation: pulse 2s ease-in-out infinite; }
-        .card-hover:hover { transform: translateY(-3px) scale(1.01) !important; }
-        .row-hover:hover  { background: rgba(255,255,255,0.025) !important; }
-        .job-hover:hover  { border-color: rgba(16,185,129,.3) !important; background: rgba(16,185,129,.04) !important; }
-      `}</style>
+      {/* Global CSS handled in index.css */}
 
       {toast && (
         <div style={{ position:"fixed", top:22, right:22, zIndex:9999, background:"linear-gradient(135deg,#064e3b,#065f46)", border:"1px solid rgba(16,185,129,.3)", borderRadius:14, padding:"13px 20px", display:"flex", alignItems:"center", gap:10, boxShadow:"0 20px 60px rgba(0,0,0,.5)", animation:"slideIn .35s ease" }}>

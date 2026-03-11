@@ -63,3 +63,13 @@ export const onboardEmployee = async (req: Request, res: Response) => {
     res.status(500).json({ error: error.message || "Failed to onboard employee" });
   }
 };
+
+export const deleteClient = async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id as string;
+    await prisma.client.delete({ where: { id } });
+    res.json({ success: true, message: "Client deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to delete client" });
+  }
+};

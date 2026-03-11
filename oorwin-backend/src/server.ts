@@ -3,7 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import authRoutes from './routes/authRoutes';
 import candidateRoutes from './routes/candidateRoutes';
-import { getClients, createClient, getEmployees, onboardEmployee } from './controllers/systemController';
+import { getClients, createClient, deleteClient, getEmployees, onboardEmployee } from './controllers/systemController';
 
 const app = express();
 
@@ -18,6 +18,7 @@ app.use('/api/candidates', candidateRoutes);
 // CRM & HRMS Routes
 app.get('/api/clients', getClients);
 app.post('/api/clients', createClient);
+app.delete('/api/clients/:id', deleteClient);
 app.get('/api/employees', getEmployees);
 app.post('/api/employees/onboard', onboardEmployee);
 

@@ -121,17 +121,7 @@ export default function Hrms() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', background: '#080e1a', fontFamily: "'DM Sans', 'Segoe UI', sans-serif", color: '#f1f5f9', overflowX: 'hidden' }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap');
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: #0f172a; } ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
-        input::placeholder { color: #475569; }
-        select option { background: #0f172a; color: #f1f5f9; }
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(18px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
-        .row-hover:hover { background: rgba(255,255,255,0.025) !important; }
-        .card-hover:hover { transform: translateY(-4px) scale(1.02) !important; border-color: rgba(16,185,129,0.3) !important; }
-      `}</style>
+      {/* Global CSS handled in index.css */}
 
       {activeModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(2,6,23,0.85)', backdropFilter: 'blur(12px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.onboardEmployee = exports.getEmployees = exports.createClient = exports.getClients = void 0;
+exports.deleteClient = exports.onboardEmployee = exports.getEmployees = exports.createClient = exports.getClients = void 0;
 const database_1 = __importDefault(require("../config/database"));
 const getClients = async (req, res) => {
     try {
@@ -69,4 +69,15 @@ const onboardEmployee = async (req, res) => {
     }
 };
 exports.onboardEmployee = onboardEmployee;
+const deleteClient = async (req, res) => {
+    try {
+        const id = req.params.id;
+        await database_1.default.client.delete({ where: { id } });
+        res.json({ success: true, message: "Client deleted successfully" });
+    }
+    catch (error) {
+        res.status(500).json({ error: "Failed to delete client" });
+    }
+};
+exports.deleteClient = deleteClient;
 //# sourceMappingURL=systemController.js.map
