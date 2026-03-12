@@ -12,19 +12,23 @@ import {
 const app = express();
 
 // Middleware
-const allowedOrigins = [
-  process.env.FRONTEND_URL || 'http://localhost:5173',
-  'http://localhost:5173',
-  'http://localhost:4173',
-];
-
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, curl, Postman)
+    // Allow requests with no origin (mobile apps, curl, Postman, Render health checks)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
+
+    const allowedOrigins = [
+      'http://localhost:5173',
+      'http://localhost:4173',
+      'http://localhost:3000',
+      process.env.FRONTEND_URL, // e.g. https://zen-ai.vercel.app
+    ].filter(Boolean);
+
+    const isAllowed =
+      allowedOrigins.includes(origin) ||
+      origin.endsWith('.vercel.app'); // allow ALL vercel preview deployments
+
+    if (isAllowed) return callback(null, true);
     return callback(new Error(`CORS blocked: ${origin}`));
   },
   credentials: true,
