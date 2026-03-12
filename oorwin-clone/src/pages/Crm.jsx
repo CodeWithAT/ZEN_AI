@@ -229,6 +229,14 @@ export default function Crm() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [notification, setNotification] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showOrgDropdown, setShowOrgDropdown] = useState(false);
+  const [currentOrg, setCurrentOrg] = useState('Main Organization');
+
+  const currentDate = new Date();
+  const currentMonthName = currentDate.toLocaleString('default', { month: 'short' });
+  const currentYear = currentDate.getFullYear();
+  const daysInMonth = new Date(currentYear, currentDate.getMonth() + 1, 0).getDate();
+  const dateRangeString = `${currentMonthName} 1 - ${currentMonthName} ${daysInMonth}, ${currentYear}`;
 
   useEffect(() => { fetchClients(); }, []);
 
@@ -326,7 +334,7 @@ export default function Crm() {
   const tabs = ['overview', 'clients', 'pipeline', 'activity'];
 
   return (
-    <div style={{ height: '100vh', display: 'flex', background: '#080e1a', fontFamily: "'DM Sans', 'Segoe UI', sans-serif", color: '#f1f5f9', overflow: 'hidden' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', background: '#080e1a', fontFamily: "'DM Sans', 'Segoe UI', sans-serif", color: '#f1f5f9', overflowX: 'hidden' }}>
       {/* Global CSS handled in index.css */}
 
       {notification && (
@@ -389,54 +397,55 @@ export default function Crm() {
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
 
-        <header className="responsive-app-header" style={{ height: 62, borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 28px', background: 'rgba(8,14,26,0.95)', backdropFilter: 'blur(20px)', position: 'sticky', top: 0, zIndex: 50, flexShrink: 0 }}>
-          <div className="responsive-app-header-left" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <button className="mobile-header-menu" onClick={() => setIsSidebarOpen(true)}>
+        {/* STANDARD HEADER — matches HRMS and Dashboard exactly */}
+        <header style={{ height: 62, borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 28px', background: 'rgba(8,14,26,0.95)', backdropFilter: 'blur(20px)', position: 'sticky', top: 0, zIndex: 50, flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <button className="mobile-header-menu" onClick={() => setIsSidebarOpen(true)} style={{ display: 'none', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: 4 }}>
               <Menu size={20} />
             </button>
-            <div>
-              <div style={{ fontSize: 16, fontWeight: 800, color: '#f1f5f9', fontFamily: "'Syne', sans-serif", letterSpacing: '-0.02em' }}>CRM Portal</div>
-              <div style={{ fontSize: 10, color: '#475569', marginTop: 1 }}>March 2026 · Main Organization</div>
+            <div style={{ position: 'relative' }}>
+              <button onClick={() => setShowOrgDropdown(!showOrgDropdown)} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '8px 14px', fontSize: 12, fontWeight: 600, color: '#cbd5e1', cursor: 'pointer' }}>
+                {currentOrg} <ChevronDown size={12} />
+              </button>
+              {showOrgDropdown && (
+                <div style={{ position: 'absolute', top: 44, left: 0, width: 220, background: '#0f172a', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, overflow: 'hidden', zIndex: 200, boxShadow: '0 24px 60px rgba(0,0,0,0.5)' }}>
+                  {['Main Organization', 'Branch Office 1', 'Branch Office 2', 'Europe Division'].map(org => (
+                    <div key={org} onClick={() => { setCurrentOrg(org); setShowOrgDropdown(false); }} style={{ padding: '12px 16px', fontSize: 12, cursor: 'pointer', color: currentOrg === org ? '#10b981' : '#94a3b8', fontWeight: currentOrg === org ? 700 : 500, borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                      {org}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-            <div style={{ height: 24, width: 1, background: 'rgba(255,255,255,0.06)' }} />
-            <div className="responsive-action-buttons" style={{ display: 'flex', gap: 12 }}>
-              {tabs.map(tab => (
-                <button key={tab} onClick={() => setActiveTab(tab)} style={{
-                  padding: '5px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600,
-                  background: activeTab === tab ? 'rgba(16,185,129,0.12)' : 'transparent',
-                  color: activeTab === tab ? '#10b981' : '#475569',
-                  border: activeTab === tab ? '1px solid rgba(16,185,129,0.25)' : '1px solid transparent',
-                  cursor: 'pointer', transition: 'all 0.2s', textTransform: 'capitalize',
-                }}>{tab}</button>
-              ))}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '8px 14px', fontSize: 11, color: '#64748b', fontWeight: 500 }}>
+              <Calendar size={12} color="#64748b" /> {dateRangeString}
             </div>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <div style={{ position: 'relative' }}>
-              <Search size={13} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#475569' }} />
+              <Search size={13} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#475569' }} />
               <input type="text" placeholder="Search clients..." value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                style={{ width: 220, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '7px 12px 7px 34px', fontSize: 12, color: '#f1f5f9', outline: 'none' }}
-                onFocus={e => e.target.style.borderColor = '#10b981'}
-                onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.07)'}
+                style={{ width: 240, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '8px 14px 8px 36px', fontSize: 12, color: '#f1f5f9', outline: 'none' }}
               />
             </div>
 
             <div style={{ position: 'relative' }}>
-              <button onClick={() => setShowNotifications(!showNotifications)} style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b', position: 'relative', transition: 'all 0.2s' }}
-                onMouseEnter={e => { e.currentTarget.style.color = '#10b981'; e.currentTarget.style.borderColor = 'rgba(16,185,129,0.3)'; }}
-                onMouseLeave={e => { e.currentTarget.style.color = '#64748b'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'; }}>
+              <button onClick={() => setShowNotifications(!showNotifications)} style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b', position: 'relative' }}>
                 <Bell size={15} />
-                <span style={{ position: 'absolute', top: 7, right: 7, width: 6, height: 6, borderRadius: '50%', background: '#ef4444', border: '1px solid #080e1a' }} className="glow-dot" />
+                <span style={{ position: 'absolute', top: 8, right: 8, width: 6, height: 6, borderRadius: '50%', background: '#ef4444', border: '1.5px solid #080e1a' }} />
               </button>
               {showNotifications && (
-                <div style={{ position: 'absolute', right: 0, top: 46, width: 300, background: '#0f172a', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, boxShadow: '0 24px 60px rgba(0,0,0,0.5)', zIndex: 200, overflow: 'hidden', animation: 'fadeIn 0.2s ease' }}>
-                  <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)', fontSize: 12, fontWeight: 700, color: '#f1f5f9' }}>Notifications</div>
+                <div style={{ position: 'absolute', right: 0, top: 46, width: 300, background: '#0f172a', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, boxShadow: '0 24px 60px rgba(0,0,0,0.5)', zIndex: 200, overflow: 'hidden' }}>
+                  <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: '#f1f5f9' }}>Notifications</span>
+                    <span onClick={() => setShowNotifications(false)} style={{ fontSize: 11, color: '#10b981', cursor: 'pointer', fontWeight: 600 }}>Dismiss</span>
+                  </div>
                   {ACTIVITY_FEED.slice(0, 3).map(item => {
                     const Icon = item.icon;
                     return (
-                      <div key={item.id} style={{ padding: '12px 16px', display: 'flex', gap: 12, alignItems: 'flex-start', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'default' }}>
+                      <div key={item.id} style={{ padding: '12px 16px', display: 'flex', gap: 12, alignItems: 'flex-start', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                         <div style={{ width: 28, height: 28, borderRadius: 8, background: item.color + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                           <Icon size={13} color={item.color} />
                         </div>
@@ -451,29 +460,53 @@ export default function Crm() {
               )}
             </div>
 
-            <button onClick={() => setShowModal(true)} style={{
-              display: 'flex', alignItems: 'center', gap: 7, background: 'linear-gradient(135deg, #10b981, #059669)',
-              border: 'none', borderRadius: 10, padding: '8px 16px', fontSize: 12, fontWeight: 700,
-              color: '#fff', cursor: 'pointer', boxShadow: '0 4px 16px rgba(16,185,129,0.35)', transition: 'all 0.2s',
-            }}
-              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(16,185,129,0.5)'; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(16,185,129,0.35)'; }}>
-              <PlusCircle size={14} /> New Client
-            </button>
-            <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, #064e3b, #065f46)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#10b981', border: '1.5px solid rgba(16,185,129,0.3)', fontFamily: "'Syne', sans-serif" }}>
-              {user?.name?.charAt(0) || "U"}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingLeft: 16, borderLeft: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#f1f5f9' }}>{user?.name || 'Recruiter'}</div>
+                <div style={{ fontSize: 10, color: '#475569' }}>CRM Manager</div>
+              </div>
+              <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'linear-gradient(135deg, #064e3b, #065f46)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: '#10b981', border: '1.5px solid rgba(16,185,129,0.3)', fontFamily: "'Syne', sans-serif" }}>
+                {user?.name?.charAt(0) || 'U'}
+              </div>
             </div>
           </div>
         </header>
 
-        <div className="responsive-scroll-container" style={{ flex: 1, padding: 28, overflowY: 'auto' }}>
+        <div style={{ flex: 1, padding: 28, overflowY: 'auto' }}>
+
+          {/* PAGE TITLE ROW with TAB NAVIGATION — same pattern as HRMS */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28, animation: 'fadeUp 0.3s ease' }}>
+            <div>
+              <h1 style={{ fontSize: 26, fontWeight: 800, fontFamily: "'Syne', sans-serif", color: '#f1f5f9', letterSpacing: '-0.03em' }}>CRM Analytics</h1>
+              <p style={{ fontSize: 13, color: '#64748b', marginTop: 6 }}>Client relationships for <span style={{ color: '#10b981', fontWeight: 700 }}>{currentOrg}</span></p>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              {/* Tab navigation */}
+              <div style={{ display: 'flex', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: 4, gap: 2 }}>
+                {tabs.map(tab => (
+                  <button key={tab} onClick={() => setActiveTab(tab)} style={{
+                    padding: '7px 16px', borderRadius: 9, fontSize: 12, fontWeight: 600,
+                    background: activeTab === tab ? 'rgba(16,185,129,0.15)' : 'transparent',
+                    color: activeTab === tab ? '#10b981' : '#64748b',
+                    border: activeTab === tab ? '1px solid rgba(16,185,129,0.3)' : '1px solid transparent',
+                    cursor: 'pointer', transition: 'all 0.2s', textTransform: 'capitalize',
+                  }}>{tab}</button>
+                ))}
+              </div>
+              <button onClick={() => setShowModal(true)} style={{
+                display: 'flex', alignItems: 'center', gap: 7, background: 'linear-gradient(135deg, #10b981, #059669)',
+                border: 'none', borderRadius: 10, padding: '10px 18px', fontSize: 13, fontWeight: 700,
+                color: '#fff', cursor: 'pointer', boxShadow: '0 4px 16px rgba(16,185,129,0.35)', transition: 'all 0.2s',
+              }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(16,185,129,0.5)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(16,185,129,0.35)'; }}>
+                <PlusCircle size={14} /> New Client
+              </button>
+            </div>
+          </div>
+
           {activeTab === 'overview' && (
             <div style={{ animation: 'fadeIn 0.4s ease' }}>
-              <div style={{ marginBottom: 28 }}>
-                <h1 style={{ fontSize: 26, fontWeight: 800, color: '#f1f5f9', fontFamily: "'Syne', sans-serif", letterSpacing: '-0.03em' }}>Dashboard Overview</h1>
-                <p style={{ fontSize: 13, color: '#475569', marginTop: 4 }}>Track performance, revenue, and client relationships</p>
-              </div>
-
               <div className="dashboard-grid" style={{ marginBottom: 24 }}>
                 <StatCard icon={Users} label="Total Clients" value={clients.length} sub={`${activeClients} active`} trend={12} color="#10b981" delay={0} />
                 <StatCard icon={DollarSign} label="Total Revenue" value={Math.floor(totalRevenue / 1000)} sub="thousands USD" trend={18} color="#3b82f6" delay={100} />

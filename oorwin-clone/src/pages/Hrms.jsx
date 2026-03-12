@@ -3,21 +3,25 @@ import api from '../api';
 import Sidebar from '../components/Sidebar';
 import { AuthContext } from '../context/AuthContext';
 import { 
-  Search, ChevronDown, Download, UserCheck, Bell, MessageSquare, Calendar, SlidersHorizontal, ArrowUpRight, ArrowDownRight, MoreHorizontal, X, Loader2, Building, CheckCircle2, Menu 
+  Search, ChevronDown, Download, Bell, MessageSquare, Calendar, ArrowUpRight, ArrowDownRight, MoreHorizontal, X, Loader2, CheckCircle2, Menu
 } from 'lucide-react';
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function Hrms() {
   const { user } = useContext(AuthContext);
   
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   const [currentOrg, setCurrentOrg] = useState('Main Organization');
   const [showOrgDropdown, setShowOrgDropdown] = useState(false);
-  const [activeModal, setActiveModal] = useState(null); // 'message', 'meeting', or null
+  const [activeModal, setActiveModal] = useState(null); // 'message', 'meeting', 'leave', or null
   const [heatmapData, setHeatmapData] = useState([]);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Leave management state
+  const [leaveRequests, setLeaveRequests] = useState([]);
+  const [leaveData, setLeaveData] = useState({ employeeId: '', leaveType: 'ANNUAL', startDate: '', endDate: '', reason: '' });
 
   const currentDate = new Date();
   const currentMonthName = currentDate.toLocaleString('default', { month: 'short' });
@@ -38,43 +42,10 @@ export default function Hrms() {
   ]);
   const [showNotifications, setShowNotifications] = useState(false);
 
-  const [leaveRequests, setLeaveRequests] = useState([]);
-  const [leaveData, setLeaveData] = useState({ employeeId: '', type: 'PTO', startDate: '', endDate: '', reason: '' });
-
   useEffect(() => { 
-    fetchEmployees(); 
+    fetchEmployees();
     fetchLeaveRequests();
   }, [currentOrg]);
-
-  const fetchLeaveRequests = async () => {
-    try {
-      const { data } = await api.get('/leave');
-      setLeaveRequests(data.data || []);
-    } catch (err) { console.error('Failed to load leave requests:', err); }
-  };
-
-  const handleLeaveSubmit = async (e) => {
-    e.preventDefault();
-    if (!leaveData.employeeId) return alert('Select an employee');
-    try {
-      await api.post('/leave', leaveData);
-      setActiveModal(null);
-      setLeaveData({ employeeId: '', type: 'PTO', startDate: '', endDate: '', reason: '' });
-      fetchLeaveRequests();
-      setAlerts(prev => [{ id: Date.now(), title: "Leave Request Submitted", desc: "Awaiting review", time: "Just now", color: "#10b981", action: "Review" }, ...prev]);
-    } catch (err) {
-      alert("Failed to submit request.");
-    }
-  };
-
-  const handleLeaveStatusUpdate = async (id, status) => {
-    try {
-      await api.put(`/leave/${id}/status`, { status });
-      fetchLeaveRequests();
-    } catch (err) {
-      alert("Failed to update status");
-    }
-  };
 
   const fetchEmployees = async () => {
     setLoading(true);
@@ -85,6 +56,30 @@ export default function Hrms() {
       setHeatmapData(newHeatmap);
     } catch (error) { console.error("Failed to load employees:", error); } 
     finally { setLoading(false); }
+  };
+
+  const fetchLeaveRequests = async () => {
+    try {
+      const { data } = await api.get('/leave');
+      setLeaveRequests(data.data || []);
+    } catch (error) { console.error("Failed to load leave requests:", error); }
+  };
+
+  const handleLeaveSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post('/leave', leaveData);
+      setActiveModal(null);
+      setLeaveData({ employeeId: '', leaveType: 'ANNUAL', startDate: '', endDate: '', reason: '' });
+      fetchLeaveRequests();
+    } catch (error) { alert('Failed to submit leave request'); }
+  };
+
+  const handleLeaveStatusUpdate = async (id, status) => {
+    try {
+      await api.put(`/leave/${id}/status`, { status });
+      fetchLeaveRequests();
+    } catch (error) { alert('Failed to update leave status'); }
   };
 
   const filteredEmployees = employees.filter(emp => {
@@ -116,6 +111,7 @@ export default function Hrms() {
 
   const totalHeadcount = employees.length;
   const activeToday = Math.floor(totalHeadcount * 0.94); 
+  const pendingLeaves = leaveRequests.filter(l => l.status === 'PENDING').length;
   
   const calcDepts = () => {
     if (employees.length === 0) return [{n: 'No Data', v: 0, p: '0%', c: '#475569'}];
@@ -155,8 +151,7 @@ export default function Hrms() {
   const getColor = (val) => { if (val >= 95) return '#10b981'; if (val >= 90) return '#34d399'; if (val >= 85) return '#fcd34d'; return '#ef4444'; };
 
   return (
-    <div style={{ height: '100vh', display: 'flex', background: '#080e1a', fontFamily: "'DM Sans', 'Segoe UI', sans-serif", color: '#f1f5f9', overflow: 'hidden' }}>
-      {/* Global CSS handled in index.css */}
+    <div style={{ minHeight: '100vh', display: 'flex', background: '#080e1a', fontFamily: "'DM Sans', 'Segoe UI', sans-serif", color: '#f1f5f9', overflowX: 'hidden' }}>
 
       {activeModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(2,6,23,0.85)', backdropFilter: 'blur(12px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
@@ -165,33 +160,27 @@ export default function Hrms() {
               <X size={16} />
             </button>
             <div style={{ fontSize: 11, color: '#10b981', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>
-              {activeModal === 'message' ? 'Broadcast' : activeModal === 'leave' ? 'Time Off' : 'Calendar'}
+              {activeModal === 'message' ? 'Broadcast' : activeModal === 'leave' ? 'Leave Request' : 'Calendar'}
             </div>
             <h2 style={{ fontSize: 24, fontWeight: 800, color: '#f1f5f9', fontFamily: "'Syne', sans-serif", marginBottom: 6 }}>
               {activeModal === 'message' ? 'Unified Announcement' : activeModal === 'leave' ? 'Request PTO' : 'Schedule Meeting'}
             </h2>
             <p style={{ fontSize: 13, color: '#64748b', marginBottom: 24 }}>
-              {activeModal === 'message' ? 'Send a broadcast message to all active employees.' : activeModal === 'leave' ? 'Submit a new leave request for an employee.' : 'Create a calendar invite for specific departments.'}
+              {activeModal === 'message' ? 'Send a broadcast message to all active employees.' : activeModal === 'leave' ? 'Submit a paid time off request.' : 'Create a calendar invite for specific departments.'}
             </p>
             <form onSubmit={activeModal === 'leave' ? handleLeaveSubmit : e => { e.preventDefault(); alert('Action completed!'); setActiveModal(null); }} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {activeModal === 'message' ? (
-                <>
-                  <input required placeholder="Subject (e.g., Q3 Townhall Update)" style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '14px 16px', fontSize: 13, color: '#f1f5f9', outline: 'none' }} />
-                  <textarea required rows="4" placeholder="Type your message here..." style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '14px 16px', fontSize: 13, color: '#f1f5f9', outline: 'none', resize: 'none' }} />
-                  <button type="submit" style={{ padding: '14px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', boxShadow: '0 8px 24px rgba(16,185,129,0.3)', marginTop: 8 }}>Send Broadcast</button>
-                </>
-              ) : activeModal === 'leave' ? (
+              {activeModal === 'leave' ? (
                 <>
                   <select required value={leaveData.employeeId} onChange={e => setLeaveData({...leaveData, employeeId: e.target.value})} style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '14px 16px', fontSize: 13, color: '#f1f5f9', outline: 'none' }}>
-                    <option value="" style={{ color: '#000' }}>Select Employee</option>
-                    {employees.map(emp => (
-                      <option key={emp.id} value={emp.id} style={{ color: '#000' }}>{emp.name}</option>
-                    ))}
+                    <option value="">Select Employee</option>
+                    {employees.map(emp => <option key={emp.id} value={emp.id}>{emp.name}</option>)}
                   </select>
-                  <select required value={leaveData.type} onChange={e => setLeaveData({...leaveData, type: e.target.value})} style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '14px 16px', fontSize: 13, color: '#f1f5f9', outline: 'none' }}>
-                    <option value="PTO" style={{ color: '#000' }}>PTO (Paid Time Off)</option>
-                    <option value="SICK" style={{ color: '#000' }}>Sick Leave</option>
-                    <option value="BEREAVEMENT" style={{ color: '#000' }}>Bereavement</option>
+                  <select value={leaveData.leaveType} onChange={e => setLeaveData({...leaveData, leaveType: e.target.value})} style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '14px 16px', fontSize: 13, color: '#f1f5f9', outline: 'none' }}>
+                    <option value="ANNUAL">Annual Leave</option>
+                    <option value="SICK">Sick Leave</option>
+                    <option value="MATERNITY">Maternity Leave</option>
+                    <option value="PATERNITY">Paternity Leave</option>
+                    <option value="UNPAID">Unpaid Leave</option>
                   </select>
                   <div style={{ display: 'flex', gap: 16 }}>
                     <input type="date" required value={leaveData.startDate} onChange={e => setLeaveData({...leaveData, startDate: e.target.value})} style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '14px 16px', fontSize: 13, color: '#f1f5f9', outline: 'none', colorScheme: 'dark' }} />
@@ -200,12 +189,18 @@ export default function Hrms() {
                   <textarea placeholder="Reason (Optional)" value={leaveData.reason} onChange={e => setLeaveData({...leaveData, reason: e.target.value})} style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '14px 16px', fontSize: 13, color: '#f1f5f9', outline: 'none', resize: 'none' }} />
                   <button type="submit" style={{ padding: '14px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', boxShadow: '0 8px 24px rgba(16,185,129,0.3)', marginTop: 8 }}>Submit Request</button>
                 </>
+              ) : activeModal === 'message' ? (
+                <>
+                  <input required placeholder="Subject (e.g., Q3 Townhall Update)" style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '14px 16px', fontSize: 13, color: '#f1f5f9', outline: 'none' }} />
+                  <textarea required rows="4" placeholder="Type your message here..." style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '14px 16px', fontSize: 13, color: '#f1f5f9', outline: 'none', resize: 'none' }} />
+                  <button type="submit" style={{ padding: '14px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', boxShadow: '0 8px 24px rgba(16,185,129,0.3)', marginTop: 8 }}>Send Broadcast</button>
+                </>
               ) : (
                 <>
                   <input required placeholder="Meeting Title (e.g., Emergency Sync)" style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '14px 16px', fontSize: 13, color: '#f1f5f9', outline: 'none' }} />
                   <div style={{ display: 'flex', gap: 16 }}>
-                    <input type="date" required style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '14px 16px', fontSize: 13, color: '#f1f5f9', outline: 'none', colorScheme: 'dark' }} />
-                    <input type="time" required style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '14px 16px', fontSize: 13, color: '#f1f5f9', outline: 'none', colorScheme: 'dark' }} />
+                    <input type="date" required style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '14px 16px', fontSize: 13, color: '#f1f5f9', outline: 'none' }} />
+                    <input type="time" required style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '14px 16px', fontSize: 13, color: '#f1f5f9', outline: 'none' }} />
                   </div>
                   <button type="submit" style={{ padding: '14px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', boxShadow: '0 8px 24px rgba(16,185,129,0.3)', marginTop: 8 }}>Send Invites</button>
                 </>
@@ -218,10 +213,10 @@ export default function Hrms() {
       {/* Global Sidebar Component */}
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
-        <header className="responsive-app-header" style={{ height: 62, borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 28px', background: 'rgba(8,14,26,0.95)', backdropFilter: 'blur(20px)', position: 'sticky', top: 0, zIndex: 50, flexShrink: 0 }}>
-          <div className="responsive-app-header-left" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <button className="mobile-header-menu" onClick={() => setIsSidebarOpen(true)}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <header style={{ height: 62, borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 28px', background: 'rgba(8,14,26,0.95)', backdropFilter: 'blur(20px)', position: 'sticky', top: 0, zIndex: 50, flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <button className="mobile-header-menu" onClick={() => setIsSidebarOpen(true)} style={{ display: 'none', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: 4 }}>
               <Menu size={20} />
             </button>
             <div style={{ position: 'relative' }}>
@@ -243,7 +238,7 @@ export default function Hrms() {
             </div>
           </div>
 
-          <div className="responsive-app-header-right" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <div style={{ position: 'relative' }}>
               <Search size={13} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#475569' }} />
               <input type="text" placeholder="Search employees..." style={{ width: 240, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '8px 14px 8px 36px', fontSize: 12, color: '#f1f5f9', outline: 'none' }} />
@@ -284,36 +279,36 @@ export default function Hrms() {
           </div>
         </header>
 
-        <div className="responsive-scroll-container" style={{ flex: 1, padding: 28, overflowY: 'auto' }}>
+        <div style={{ flex: 1, padding: 28, overflowY: 'auto' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 1600, margin: '0 auto' }}>
             
-            <div className="responsive-page-title-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', animation: 'fadeUp 0.3s ease' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', animation: 'fadeUp 0.3s ease' }}>
               <div>
                 <h1 style={{ fontSize: 26, fontWeight: 800, fontFamily: "'Syne', sans-serif", color: '#f1f5f9', letterSpacing: '-0.03em' }}>Intelligence Dashboard</h1>
                 <p style={{ fontSize: 13, color: '#64748b', marginTop: 6 }}>Real-time HR analytics for <span style={{ color: '#10b981', fontWeight: 700 }}>{currentOrg}</span></p>
               </div>
-              <div className="responsive-action-buttons" style={{ display: 'flex', gap: 12 }}>
+              <div style={{ display: 'flex', gap: 12 }}>
                 <button onClick={() => setActiveModal('leave')} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '10px 18px', fontSize: 13, fontWeight: 600, color: '#cbd5e1', cursor: 'pointer', transition: 'all 0.2s' }}>
                   <Calendar size={14} color="#64748b" /> Request PTO
                 </button>
                 <button onClick={() => setActiveModal('message')} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '10px 18px', fontSize: 13, fontWeight: 600, color: '#cbd5e1', cursor: 'pointer', transition: 'all 0.2s' }}>
-                  <MessageSquare size={14} color="#64748b" /> Broadcast
+                  <MessageSquare size={14} color="#64748b" /> Unified message
                 </button>
                 <button onClick={() => setActiveModal('meeting')} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: 10, padding: '10px 18px', fontSize: 13, fontWeight: 700, color: '#fff', cursor: 'pointer', boxShadow: '0 4px 16px rgba(16,185,129,0.3)', transition: 'all 0.2s' }}>
-                  <Calendar size={14} /> Meeting
+                  <Calendar size={14} /> Schedule meeting
                 </button>
               </div>
             </div>
 
-            <div className="hrms-top-grid" style={{ animation: 'fadeUp 0.4s ease' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 18, animation: 'fadeUp 0.4s ease' }}>
               {[
                 { label: 'Total Headcount', value: totalHeadcount, sub: 'Total active in database', isLive: true },
                 { label: 'Active Today', value: activeToday, sub: '94% attendance rate', up: true, diff: '5%' },
-                { label: 'Pending Leaves', value: leaveRequests.filter(l => l.status === 'PENDING').length, sub: 'Awaiting manager approval', isLive: true }
+                { label: 'Pending Leaves', value: pendingLeaves, sub: 'Awaiting review', up: pendingLeaves === 0, diff: `${pendingLeaves} open` }
               ].map((kpi, i) => (
                 <div key={i} className="card-hover" style={{ background: 'linear-gradient(135deg, #1e293b, #0f172a)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 20, padding: 24, transition: 'all 0.4s' }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>{kpi.label}</div>
-                  <div className="responsive-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, animation: 'fadeUp 0.45s ease' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12, marginBottom: 8 }}>
                     <div style={{ fontSize: 36, fontWeight: 800, fontFamily: "'Syne', sans-serif", color: '#f1f5f9', letterSpacing: '-0.02em', lineHeight: 1 }}>{kpi.value}</div>
                     {kpi.isLive ? (
                       <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color: '#10b981', marginBottom: 4 }}><ArrowUpRight size={13} /> Live DB</span>
@@ -326,7 +321,7 @@ export default function Hrms() {
               ))}
             </div>
 
-            <div className="chart-grid" style={{ animation: 'fadeUp 0.45s ease' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, animation: 'fadeUp 0.45s ease' }}>
               <div style={{ background: 'linear-gradient(135deg, #1a2234, #0f172a)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 20, padding: 24 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
                   <h3 style={{ fontSize: 15, fontWeight: 700, color: '#f1f5f9', fontFamily: "'Syne', sans-serif" }}>Workforce Composition (Live)</h3>
@@ -356,11 +351,11 @@ export default function Hrms() {
                   <MoreHorizontal size={18} color="#475569" />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <div className="responsive-grid-5" style={{ display: 'grid', gridTemplateColumns: 'minmax(40px,1fr) repeat(5, 1fr)', gap: 10, textAlign: 'center', fontSize: 11, fontWeight: 600, color: '#64748b', paddingBottom: 6 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'minmax(40px,1fr) repeat(5, 1fr)', gap: 10, textAlign: 'center', fontSize: 11, fontWeight: 600, color: '#64748b', paddingBottom: 6 }}>
                     <div /><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div>
                   </div>
                   {heatmapData.map((week, i) => (
-                    <div key={i} className="responsive-grid-3" style={{ display: 'grid', gridTemplateColumns: 'minmax(40px,1fr) repeat(5, 1fr)', gap: 10, alignItems: 'center' }}>
+                    <div key={i} style={{ display: 'grid', gridTemplateColumns: 'minmax(40px,1fr) repeat(5, 1fr)', gap: 10, alignItems: 'center' }}>
                       <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>Wk {i+1}</div>
                       {week.map((val, j) => (
                         <div key={j} style={{ height: 38, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, background: getColor(val) + '20', color: getColor(val), border: `1px solid ${getColor(val)}30` }}>
@@ -378,7 +373,7 @@ export default function Hrms() {
                 <h3 style={{ fontSize: 15, fontWeight: 700, color: '#f1f5f9', fontFamily: "'Syne', sans-serif" }}>Payroll Intelligence</h3>
                 <p style={{ fontSize: 11, color: '#475569', marginTop: 4 }}>Allocations based on hired employee departments</p>
               </div>
-              <div className="responsive-payroll-flex" style={{ display: 'flex', gap: 48, marginBottom: 36 }}>
+              <div style={{ display: 'flex', gap: 48, marginBottom: 36 }}>
                 <div><div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Total Payroll</div><div style={{ fontSize: 24, fontWeight: 800, fontFamily: "'Syne', sans-serif", color: '#f1f5f9' }}>${grandTotal}K</div></div>
                 <div><div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Base Salary</div><div style={{ fontSize: 24, fontWeight: 800, fontFamily: "'Syne', sans-serif", color: '#f1f5f9' }}>${totalBase}K</div></div>
                 <div><div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Benefits</div><div style={{ fontSize: 24, fontWeight: 800, fontFamily: "'Syne', sans-serif", color: '#f1f5f9' }}>${totalBen}K</div></div>
@@ -398,67 +393,57 @@ export default function Hrms() {
               </div>
             </div>
 
-            <div style={{ background: 'linear-gradient(135deg, #1a2234, #0f172a)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 20, overflow: 'hidden', animation: 'fadeUp 0.55s ease' }}>
-              <div className="card-header" style={{ padding: '24px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div>
-                  <h3 style={{ fontSize: 15, fontWeight: 700, color: '#f1f5f9', fontFamily: "'Syne', sans-serif" }}>Leave Requests</h3>
-                  <p style={{ fontSize: 11, color: '#475569', marginTop: 4 }}>Review pending time off requests</p>
+            {/* Leave Requests Table */}
+            {leaveRequests.length > 0 && (
+              <div style={{ background: 'linear-gradient(135deg, #1a2234, #0f172a)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 20, overflow: 'hidden', animation: 'fadeUp 0.52s ease' }}>
+                <div style={{ padding: '24px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div>
+                    <h3 style={{ fontSize: 15, fontWeight: 700, color: '#f1f5f9', fontFamily: "'Syne', sans-serif" }}>Leave Requests</h3>
+                    <p style={{ fontSize: 11, color: '#475569', marginTop: 4 }}>{pendingLeaves} pending approval</p>
+                  </div>
+                </div>
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                    <thead>
+                      <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                        {['Employee', 'Type', 'Start Date', 'End Date', 'Status', 'Actions'].map(h => (
+                          <th key={h} style={{ padding: '14px 24px', fontSize: 10, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {leaveRequests.map(req => (
+                        <tr key={req.id} className="row-hover" style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                          <td style={{ padding: '14px 24px', fontSize: 13, fontWeight: 700, color: '#f1f5f9' }}>{req.employee?.name || 'N/A'}</td>
+                          <td style={{ padding: '14px 24px', fontSize: 12, color: '#cbd5e1' }}>{req.leaveType}</td>
+                          <td style={{ padding: '14px 24px', fontSize: 12, color: '#cbd5e1' }}>{new Date(req.startDate).toLocaleDateString()}</td>
+                          <td style={{ padding: '14px 24px', fontSize: 12, color: '#cbd5e1' }}>{new Date(req.endDate).toLocaleDateString()}</td>
+                          <td style={{ padding: '14px 24px' }}>
+                            <span style={{ padding: '4px 10px', borderRadius: 6, fontSize: 10, fontWeight: 700, background: req.status === 'PENDING' ? '#f59e0b20' : req.status === 'APPROVED' ? '#10b98120' : '#ef444420', color: req.status === 'PENDING' ? '#f59e0b' : req.status === 'APPROVED' ? '#10b981' : '#ef4444', border: `1px solid ${req.status === 'PENDING' ? '#f59e0b' : req.status === 'APPROVED' ? '#10b981' : '#ef4444'}40` }}>{req.status}</span>
+                          </td>
+                          <td style={{ padding: '14px 24px' }}>
+                            {req.status === 'PENDING' && (
+                              <div style={{ display: 'flex', gap: 8 }}>
+                                <button onClick={() => handleLeaveStatusUpdate(req.id, 'APPROVED')} style={{ padding: '5px 12px', borderRadius: 7, fontSize: 11, fontWeight: 700, background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', color: '#10b981', cursor: 'pointer' }}>Approve</button>
+                                <button onClick={() => handleLeaveStatusUpdate(req.id, 'REJECTED')} style={{ padding: '5px 12px', borderRadius: 7, fontSize: 11, fontWeight: 700, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', cursor: 'pointer' }}>Reject</button>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                  <thead>
-                    <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                      <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Employee</th>
-                      <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Type</th>
-                      <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Dates</th>
-                      <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</th>
-                      <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {leaveRequests.length === 0 ? (
-                      <tr><td colSpan="5" style={{ padding: '24px', textAlign: 'center', color: '#64748b', fontSize: 13 }}>No leave requests found.</td></tr>
-                    ) : leaveRequests.map(req => (
-                      <tr key={req.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                        <td style={{ padding: '16px 24px' }}>
-                          <span style={{ fontSize: 13, fontWeight: 700, color: '#f1f5f9' }}>{req.employee?.name || 'Unknown'}</span>
-                        </td>
-                        <td style={{ padding: '16px 24px' }}><span style={{ fontSize: 12, color: '#cbd5e1' }}>{req.type}</span></td>
-                        <td style={{ padding: '16px 24px' }}>
-                          <span style={{ fontSize: 12, color: '#64748b' }}>{new Date(req.startDate).toLocaleDateString()} - {new Date(req.endDate).toLocaleDateString()}</span>
-                        </td>
-                        <td style={{ padding: '16px 24px' }}>
-                          <span style={{ 
-                            padding: '4px 10px', borderRadius: 12, fontSize: 10, fontWeight: 700, letterSpacing: '0.05em',
-                            background: req.status === 'APPROVED' ? 'rgba(16,185,129,0.15)' : req.status === 'REJECTED' ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)',
-                            color: req.status === 'APPROVED' ? '#10b981' : req.status === 'REJECTED' ? '#ef4444' : '#f59e0b'
-                          }}>
-                            {req.status}
-                          </span>
-                        </td>
-                        <td style={{ padding: '16px 24px', textAlign: 'right' }}>
-                          {req.status === 'PENDING' && (
-                            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                              <button onClick={() => handleLeaveStatusUpdate(req.id, 'REJECTED')} style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', padding: '6px 12px', borderRadius: 8, color: '#ef4444', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Reject</button>
-                              <button onClick={() => handleLeaveStatusUpdate(req.id, 'APPROVED')} style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', padding: '6px 12px', borderRadius: 8, color: '#10b981', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Approve</button>
-                            </div>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            )}
 
-            <div style={{ background: 'linear-gradient(135deg, #1a2234, #0f172a)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 20, overflow: 'hidden', animation: 'fadeUp 0.60s ease' }}>
-              <div className="card-header" style={{ padding: '24px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ background: 'linear-gradient(135deg, #1a2234, #0f172a)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 20, overflow: 'hidden', animation: 'fadeUp 0.55s ease' }}>
+              <div style={{ padding: '24px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
                   <h3 style={{ fontSize: 15, fontWeight: 700, color: '#f1f5f9', fontFamily: "'Syne', sans-serif" }}>Employee Directory</h3>
                   <p style={{ fontSize: 11, color: '#475569', marginTop: 4 }}>Showing {currentEmployees.length} of {filteredEmployees.length} matching records</p>
                 </div>
-                <div className="responsive-filter-group" style={{ display: 'flex', gap: 12 }}>
+                <div style={{ display: 'flex', gap: 12 }}>
                   <div style={{ position: 'relative' }}>
                     <Search size={13} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#475569' }} />
                     <input type="text" placeholder="Search name, role..." value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }} style={{ width: 220, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '8px 12px 8px 34px', fontSize: 12, color: '#f1f5f9', outline: 'none' }} />
