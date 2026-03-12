@@ -23,7 +23,7 @@
 
 body {
   background-color: var(--color-bg-dark);
-  color: #e5e7eb; /* Light Gray */
+  color: #e5e7eb;
   font-family: 'DM Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   overflow-x: hidden;
 }
@@ -32,15 +32,14 @@ h1, h2, h3, h4, h5, h6, .font-syne {
   font-family: 'Syne', sans-serif;
 }
 
-/* Global App Styles */
 * { box-sizing: border-box; }
-::-webkit-scrollbar { width: 4px; } 
-::-webkit-scrollbar-track { background: #0f172a; } 
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: #0f172a; }
 ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
 input::placeholder { color: #475569; }
 select option { background: #0f172a; color: #f1f5f9; }
 
-/* Animations used in new UI */
+/* Animations */
 @keyframes fadeUp { from { opacity: 0; transform: translateY(18px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
 @keyframes slideIn { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 @keyframes slideInDown { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: translateY(0); } }
@@ -76,15 +75,121 @@ select option { background: #0f172a; color: #f1f5f9; }
 }
 
 /* =========================================================== */
-/* TARGETED MOBILE HELPERS — Desktop styles untouched          */
+/* SIDEBAR — Desktop: always visible, Mobile: overlay          */
 /* =========================================================== */
 
-/* Show the hamburger menu button only on mobile */
+.app-sidebar {
+  /* Desktop: always in the flexbox flow */
+  flex-shrink: 0;
+}
+
+/* The hamburger button — hidden on desktop, shown on mobile */
 .mobile-header-menu {
   display: none !important;
 }
 
-@media (max-width: 768px) {
+/* Date pill in the header — shown on desktop, hidden on mobile */
+.header-date-pill {
+  display: flex;
+}
+
+/* Org-switcher button — prevent text overflow on any screen */
+.app-header .org-btn {
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+/* Page title action buttons row — allow wrapping on mobile */
+.page-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.page-title-actions {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* KPI 3-column grid for HRMS */
+.kpi-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+/* 2-column section grid */
+.section-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+/* Sidebar backdrop — hidden by default */
+.sidebar-backdrop {
+  display: none;
+}
+
+/* =========================================================== */
+/* TABLET — 768px and below                                    */
+/* =========================================================== */
+@media (max-width: 900px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .chart-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .kpi-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .section-grid-2 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* =========================================================== */
+/* MOBILE — 640px and below                                    */
+/* =========================================================== */
+@media (max-width: 640px) {
+  /* Sidebar becomes a fixed overlay, takes zero flex space */
+  .app-sidebar {
+    position: fixed !important;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 260px !important;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 9999 !important;
+  }
+
+  .app-sidebar.sidebar-open {
+    transform: translateX(0) !important;
+  }
+
+  /* Backdrop overlay when sidebar is open */
+  .sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 9998;
+    display: block !important;
+  }
+
+  /* Show hamburger menu on mobile */
   .mobile-header-menu {
     display: flex !important;
     background: none;
@@ -96,27 +201,93 @@ select option { background: #0f172a; color: #f1f5f9; }
     justify-content: center;
   }
 
-  /* Sidebar becomes a fixed overlay on mobile */
-  .app-sidebar {
-    position: fixed !important;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    transform: translateX(-100%);
-    transition: transform 0.3s ease;
-    z-index: 9999 !important;
-  }
-  .app-sidebar.sidebar-open {
-    transform: translateX(0) !important;
+  /* Hide search bar on small screens */
+  .header-search {
+    display: none !important;
   }
 
-  /* Backdrop overlay when sidebar is open */
-  .sidebar-backdrop {
-    display: block !important;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.6);
-    z-index: 9998;
+  /* Hide date pill on mobile — saves space in header */
+  .header-date-pill {
+    display: none !important;
+  }
+
+  /* Hide user name text, keep avatar */
+  .header-username-text {
+    display: none !important;
+  }
+
+  /* Page title row — stack vertically */
+  .page-title-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .page-title-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .page-title-actions button {
+    flex: 1;
+    min-width: 0;
+    justify-content: center;
+  }
+
+  /* KPI cards — 1 column on mobile */
+  .kpi-grid-3 {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  /* section panels — 1 column on mobile */
+  .section-grid-2 {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .chart-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  /* Make content area take full width when sidebar is overlay */
+  .page-content-area {
+    width: 100%;
+    padding: 16px !important;
+  }
+
+  /* Reduce header padding/size on mobile */
+  .app-header {
+    padding: 0 12px !important;
+  }
+
+  /* Stack filter buttons nicely on mobile */
+  .page-title-actions {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
+
+/* Extra-small: keep 2 columns but tighter padding */
+@media (max-width: 400px) {
+  .page-content-area {
+    padding: 12px !important;
+  }
+  .dashboard-grid {
+    gap: 8px;
+  }
+  .kpi-grid-3 {
+    grid-template-columns: 1fr;
+    gap: 10px;
   }
 }
 

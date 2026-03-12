@@ -43,13 +43,15 @@ const AnimatedCounter = ({ end, duration = 2, suffix = "+" }) => {
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const navigate = useNavigate(); // HOOK INITIALIZED
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const closeMenu = () => setMobileMenuOpen(false);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 flex flex-col">
@@ -58,8 +60,8 @@ const Header = () => {
         <div className="flex items-center gap-2"><Star size={14} className="text-yellow-400 fill-yellow-400" /><span>G2 4.7 Star Rating</span></div>
         <div className="flex items-center gap-2"><ShieldCheck size={14} className="text-green-400" /><span>Advanced Data Security</span></div>
       </div>
-      <nav className={`transition-all duration-300 px-6 py-4 md:px-12 flex justify-between items-center ${isScrolled ? 'bg-primary-navy/90 backdrop-blur-md shadow-lg border-b border-white/5' : 'bg-transparent'}`}>
-        <div className="flex items-center gap-3 cursor-pointer">
+      <nav className={`transition-all duration-300 px-6 py-4 md:px-12 flex justify-between items-center ${isScrolled || mobileMenuOpen ? 'bg-primary-navy/95 backdrop-blur-md shadow-lg border-b border-white/5' : 'bg-transparent'}`}>
+        <div className="flex items-center gap-3 cursor-pointer" onClick={() => { closeMenu(); }}>
           <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-accent-blue to-accent-pink flex items-center justify-center p-0.5">
             <div className="w-full h-full bg-primary-navy rounded-full" />
           </div>
@@ -78,10 +80,30 @@ const Header = () => {
             Start for Free
           </button>
         </div>
-        <button className="lg:hidden text-white" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+        <button className="lg:hidden text-white p-1" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
           {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </nav>
+
+      {/* MOBILE MENU PANEL */}
+      {mobileMenuOpen && (
+        <div style={{ background: 'rgba(15,23,42,0.98)', backdropFilter: 'blur(20px)', borderTop: '1px solid rgba(255,255,255,0.06)', padding: '20px 24px 28px', display: 'flex', flexDirection: 'column', gap: 0 }}>
+          {['Product', 'Solution', 'Resources', 'Pricing', 'Company'].map((item) => (
+            <div key={item} onClick={closeMenu} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', color: '#cbd5e1', fontSize: 15, fontWeight: 600 }}>
+              {item}
+              <ChevronDown size={16} color="#475569" />
+            </div>
+          ))}
+          <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <button onClick={() => { navigate('/login'); closeMenu(); }} style={{ width: '100%', padding: '13px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, fontSize: 15, fontWeight: 700, color: '#f1f5f9', cursor: 'pointer' }}>
+              Login
+            </button>
+            <button onClick={() => { navigate('/register'); closeMenu(); }} style={{ width: '100%', padding: '13px', background: 'linear-gradient(135deg, #EC4899, #8B5CF6)', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, color: '#fff', cursor: 'pointer', boxShadow: '0 4px 20px rgba(139,92,246,0.4)' }}>
+              Start for Free →
+            </button>
+          </div>
+        </div>
+      )}
     </header>
   );
 };

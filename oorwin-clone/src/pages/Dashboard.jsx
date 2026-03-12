@@ -3,7 +3,7 @@ import api from "../api";
 import { AuthContext } from "../context/AuthContext";
 import Sidebar from "../components/Sidebar";
 import {
-  UploadCloud, Search, Target, PlusCircle, Sparkles, X,
+  UploadCloud, Search, Target, PlusCircle, Sparkles, X, Menu,
   RefreshCw, Bell, ChevronDown, Calendar, Zap, BarChart2,
   Users, LogOut, Briefcase, Building2, UserCheck, CheckCircle2,
   ArrowUpRight, Activity, FileText, Star, TrendingUp, AlertCircle
@@ -71,6 +71,7 @@ export default function Dashboard() {
   const [showOrgDrop, setShowOrgDrop]       = useState(false);
   const [showBell, setShowBell]             = useState(false);
   const [toast, setToast]                   = useState(null);
+  const [isSidebarOpen, setIsSidebarOpen]   = useState(false);
   const fileRef = useRef(null);
   const [alerts, setAlerts] = useState([
     { id: 1, title: "New application received", desc: "Arjun Mehta applied for Senior React Dev", time: "10m ago", color: "#10b981" },
@@ -191,12 +192,15 @@ export default function Dashboard() {
       )}
 
       {/* Global Sidebar Integration */}
-      <Sidebar />
+      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-      <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
+      <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden', minWidth: 0 }}>
         
         <header style={{ height:58, borderBottom:"1px solid rgba(255,255,255,.05)", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 26px", background:"rgba(8,14,26,.96)", backdropFilter:"blur(20px)", position:"sticky", top:0, zIndex:50, flexShrink:0 }}>
           <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+            <button className="mobile-header-menu" onClick={() => setIsSidebarOpen(true)}>
+              <Menu size={20} />
+            </button>
             <div style={{ position:"relative" }}>
               <button onClick={()=>setShowOrgDrop(v=>!v)} style={{ display:"flex", alignItems:"center", gap:6, background:"rgba(255,255,255,.04)", border:"1px solid rgba(255,255,255,.08)", borderRadius:8, padding:"6px 12px", fontSize:12, fontWeight:600, color:"#94a3b8", cursor:"pointer", transition:"border-color .2s" }}
                 onMouseEnter={e=>e.currentTarget.style.borderColor="rgba(16,185,129,.35)"}
@@ -214,13 +218,13 @@ export default function Dashboard() {
                 </div>
               )}
             </div>
-            <div style={{ display:"flex", alignItems:"center", gap:6, background:"rgba(255,255,255,.03)", border:"1px solid rgba(255,255,255,.06)", borderRadius:8, padding:"6px 12px", fontSize:11, color:"#475569", fontWeight:500 }}>
+            <div className="header-date-pill" style={{ display:"flex", alignItems:"center", gap:6, background:"rgba(255,255,255,.03)", border:"1px solid rgba(255,255,255,.06)", borderRadius:8, padding:"6px 12px", fontSize:11, color:"#475569", fontWeight:500 }}>
               <Calendar size={11} color="#475569"/> {dateStr}
             </div>
           </div>
 
           <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-            <div style={{ position:"relative" }}>
+            <div className="header-search" style={{ position:"relative" }}>
               <Search size={12} style={{ position:"absolute", left:11, top:"50%", transform:"translateY(-50%)", color:"#475569" }}/>
               <input placeholder="Global search..." value={searchQuery} onChange={e=>setSearchQuery(e.target.value)}
                 style={{ width:210, background:"rgba(255,255,255,.04)", border:"1px solid rgba(255,255,255,.07)", borderRadius:9, padding:"7px 12px 7px 32px", fontSize:12, color:"#f1f5f9", outline:"none" }}/>
@@ -254,7 +258,7 @@ export default function Dashboard() {
             </div>
 
             <div style={{ display:"flex", alignItems:"center", gap:9, paddingLeft:12, borderLeft:"1px solid rgba(255,255,255,.06)" }}>
-              <div style={{ textAlign:"right" }}>
+              <div className="header-username-text" style={{ textAlign:"right" }}>
                 <div style={{ fontSize:12, fontWeight:700, color:"#f1f5f9" }}>{user?.name || "Recruiter"}</div>
                 <div style={{ fontSize:10, color:"#475569" }}>System Admin</div>
               </div>
@@ -266,33 +270,33 @@ export default function Dashboard() {
         </header>
 
         <div style={{ flex:1, padding:26, overflowY:"auto" }}>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:24, animation:"fadeUp .4s ease" }}>
+          <div className="page-title-row" style={{ marginBottom: 24, animation: 'fadeUp .4s ease' }}>
             <div>
-              <h1 style={{ fontSize:25, fontWeight:800, fontFamily:"'Syne',sans-serif", color:"#f1f5f9", letterSpacing:"-.03em" }}>Active Recruitment</h1>
-              <p style={{ fontSize:13, color:"#475569", marginTop:4 }}>Manage talent pipeline for <span style={{ color:"#10b981", fontWeight:700 }}>{currentOrg}</span></p>
+              <h1 style={{ fontSize: 25, fontWeight: 800, fontFamily: "'Syne',sans-serif", color: '#f1f5f9', letterSpacing: '-.03em' }}>Active Recruitment</h1>
+              <p style={{ fontSize: 13, color: '#475569', marginTop: 4 }}>Manage talent pipeline for <span style={{ color: '#10b981', fontWeight: 700 }}>{currentOrg}</span></p>
             </div>
-            <div style={{ display:"flex", gap:10 }}>
-              <button onClick={()=>setShowModal(true)} style={{ display:"flex", alignItems:"center", gap:7, background:"rgba(255,255,255,.04)", border:"1px solid rgba(255,255,255,.1)", borderRadius:10, padding:"9px 17px", fontSize:13, fontWeight:700, color:"#cbd5e1", cursor:"pointer" }}>
-                <PlusCircle size={14}/> Post Job
+            <div className="page-title-actions">
+              <button onClick={() => setShowModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.1)', borderRadius: 10, padding: '9px 17px', fontSize: 13, fontWeight: 700, color: '#cbd5e1', cursor: 'pointer' }}>
+                <PlusCircle size={14} /> Post Job
               </button>
-              <button onClick={toggleAI} style={{ display:"flex", alignItems:"center", gap:7, background:isMatchMode?"rgba(239,68,68,.1)":"linear-gradient(135deg,#10b981,#059669)", border:isMatchMode?"1px solid rgba(239,68,68,.3)":"none", borderRadius:10, padding:"9px 17px", fontSize:13, fontWeight:700, color:isMatchMode?"#ef4444":"#fff", cursor:"pointer" }}>
-                {isMatchMode ? <><RefreshCw size={13}/> Clear AI</> : <><Target size={13}/> AI Rank</>}
+              <button onClick={toggleAI} style={{ display: 'flex', alignItems: 'center', gap: 7, background: isMatchMode ? 'rgba(239,68,68,.1)' : 'linear-gradient(135deg,#10b981,#059669)', border: isMatchMode ? '1px solid rgba(239,68,68,.3)' : 'none', borderRadius: 10, padding: '9px 17px', fontSize: 13, fontWeight: 700, color: isMatchMode ? '#ef4444' : '#fff', cursor: 'pointer' }}>
+                {isMatchMode ? <><RefreshCw size={13} /> Clear AI</> : <><Target size={13} /> AI Rank</>}
               </button>
             </div>
           </div>
 
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:14, marginBottom:22 }}>
-            {kpis.map((k, i) => <KpiCard key={k.label} kpi={k} delay={i * 80}/>)}
+          <div className="dashboard-grid" style={{ marginBottom: 22 }}>
+            {kpis.map((k, i) => <KpiCard key={k.label} kpi={k} delay={i * 80} />)}
           </div>
 
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 330px", gap:18 }}>
+          <div className="chart-grid">
             
             <div style={{ background:"linear-gradient(135deg,#1a2234,#0f172a)", border:"1px solid rgba(255,255,255,.06)", borderRadius:20, overflow:"hidden", animation:"fadeUp .5s ease" }}>
-              <div style={{ padding:"17px 20px", borderBottom:"1px solid rgba(255,255,255,.05)", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+              <div style={{ padding:"14px 16px", borderBottom:"1px solid rgba(255,255,255,.05)", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:10 }}>
                 <div><span style={{ fontSize:14, fontWeight:700, color:"#f1f5f9" }}>Open Applications</span><span style={{ fontSize:11, color:"#475569", marginLeft:10 }}>({filtered.length})</span></div>
-                <div style={{ display:"flex", gap:6 }}>
+                <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
                   {["ALL","ACTIVE","INTERVIEW","HIRED"].map(s=>(
-                    <button key={s} onClick={()=>setStatusFilter(s)} style={{ padding:"4px 11px", borderRadius:7, fontSize:10, fontWeight:700, background:statusFilter===s?"rgba(16,185,129,.12)":"transparent", border:statusFilter===s?"1px solid rgba(16,185,129,.3)":"1px solid rgba(255,255,255,.06)", color:statusFilter===s?"#10b981":"#475569", cursor:"pointer" }}>
+                    <button key={s} onClick={()=>setStatusFilter(s)} style={{ padding:"5px 12px", borderRadius:7, fontSize:10, fontWeight:700, background:statusFilter===s?"rgba(16,185,129,.12)":"transparent", border:statusFilter===s?"1px solid rgba(16,185,129,.3)":"1px solid rgba(255,255,255,.06)", color:statusFilter===s?"#10b981":"#475569", cursor:"pointer", whiteSpace:"nowrap" }}>
                       {s}
                     </button>
                   ))}

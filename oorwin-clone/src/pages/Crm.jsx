@@ -395,12 +395,12 @@ export default function Crm() {
       {/* Global Sidebar Component */}
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative', minWidth: 0 }}>
 
         {/* STANDARD HEADER — matches HRMS and Dashboard exactly */}
-        <header style={{ height: 62, borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 28px', background: 'rgba(8,14,26,0.95)', backdropFilter: 'blur(20px)', position: 'sticky', top: 0, zIndex: 50, flexShrink: 0 }}>
+        <header className="app-header" style={{ height: 62, borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 28px', background: 'rgba(8,14,26,0.95)', backdropFilter: 'blur(20px)', position: 'sticky', top: 0, zIndex: 50, flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <button className="mobile-header-menu" onClick={() => setIsSidebarOpen(true)} style={{ display: 'none', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: 4 }}>
+            <button className="mobile-header-menu" onClick={() => setIsSidebarOpen(true)}>
               <Menu size={20} />
             </button>
             <div style={{ position: 'relative' }}>
@@ -417,13 +417,13 @@ export default function Crm() {
                 </div>
               )}
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '8px 14px', fontSize: 11, color: '#64748b', fontWeight: 500 }}>
+            <div className="header-date-pill" style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '8px 14px', fontSize: 11, color: '#64748b', fontWeight: 500 }}>
               <Calendar size={12} color="#64748b" /> {dateRangeString}
             </div>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div style={{ position: 'relative' }}>
+            <div className="header-search" style={{ position: 'relative' }}>
               <Search size={13} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#475569' }} />
               <input type="text" placeholder="Search clients..." value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
@@ -461,7 +461,7 @@ export default function Crm() {
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingLeft: 16, borderLeft: '1px solid rgba(255,255,255,0.06)' }}>
-              <div style={{ textAlign: 'right' }}>
+              <div className="header-username-text" style={{ textAlign: 'right' }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: '#f1f5f9' }}>{user?.name || 'Recruiter'}</div>
                 <div style={{ fontSize: 10, color: '#475569' }}>CRM Manager</div>
               </div>
@@ -472,15 +472,15 @@ export default function Crm() {
           </div>
         </header>
 
-        <div style={{ flex: 1, padding: 28, overflowY: 'auto' }}>
+        <div className="page-content-area" style={{ flex: 1, padding: 28, overflowY: 'auto' }}>
 
-          {/* PAGE TITLE ROW with TAB NAVIGATION — same pattern as HRMS */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28, animation: 'fadeUp 0.3s ease' }}>
+          {/* PAGE TITLE ROW with TAB NAVIGATION */}
+          <div className="page-title-row" style={{ marginBottom: 28, animation: 'fadeUp 0.3s ease' }}>
             <div>
               <h1 style={{ fontSize: 26, fontWeight: 800, fontFamily: "'Syne', sans-serif", color: '#f1f5f9', letterSpacing: '-0.03em' }}>CRM Analytics</h1>
               <p style={{ fontSize: 13, color: '#64748b', marginTop: 6 }}>Client relationships for <span style={{ color: '#10b981', fontWeight: 700 }}>{currentOrg}</span></p>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div className="page-title-actions" style={{ alignItems: 'center' }}>
               {/* Tab navigation */}
               <div style={{ display: 'flex', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: 4, gap: 2 }}>
                 {tabs.map(tab => (

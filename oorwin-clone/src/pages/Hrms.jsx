@@ -213,10 +213,10 @@ export default function Hrms() {
       {/* Global Sidebar Component */}
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <header style={{ height: 62, borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 28px', background: 'rgba(8,14,26,0.95)', backdropFilter: 'blur(20px)', position: 'sticky', top: 0, zIndex: 50, flexShrink: 0 }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
+        <header className="app-header" style={{ height: 62, borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 28px', background: 'rgba(8,14,26,0.95)', backdropFilter: 'blur(20px)', position: 'sticky', top: 0, zIndex: 50, flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <button className="mobile-header-menu" onClick={() => setIsSidebarOpen(true)} style={{ display: 'none', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: 4 }}>
+            <button className="mobile-header-menu" onClick={() => setIsSidebarOpen(true)}>
               <Menu size={20} />
             </button>
             <div style={{ position: 'relative' }}>
@@ -233,13 +233,13 @@ export default function Hrms() {
                 </div>
               )}
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '8px 14px', fontSize: 11, color: '#64748b', fontWeight: 500 }}>
+            <div className="header-date-pill" style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '8px 14px', fontSize: 11, color: '#64748b', fontWeight: 500 }}>
               <Calendar size={12} color="#64748b" /> {dateRangeString}
             </div>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div style={{ position: 'relative' }}>
+            <div className="header-search" style={{ position: 'relative' }}>
               <Search size={13} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#475569' }} />
               <input type="text" placeholder="Search employees..." style={{ width: 240, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '8px 14px 8px 36px', fontSize: 12, color: '#f1f5f9', outline: 'none' }} />
             </div>
@@ -268,7 +268,7 @@ export default function Hrms() {
               )}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingLeft: 16, borderLeft: '1px solid rgba(255,255,255,0.06)' }}>
-              <div style={{ textAlign: 'right' }}>
+              <div className="header-username-text" style={{ textAlign: 'right' }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: '#f1f5f9' }}>{user?.name || 'Recruiter'}</div>
                 <div style={{ fontSize: 10, color: '#475569' }}>System Admin</div>
               </div>
@@ -279,15 +279,15 @@ export default function Hrms() {
           </div>
         </header>
 
-        <div style={{ flex: 1, padding: 28, overflowY: 'auto' }}>
+        <div className="page-content-area" style={{ flex: 1, padding: 28, overflowY: 'auto' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 1600, margin: '0 auto' }}>
             
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', animation: 'fadeUp 0.3s ease' }}>
+            <div className="page-title-row" style={{ animation: 'fadeUp 0.3s ease' }}>
               <div>
                 <h1 style={{ fontSize: 26, fontWeight: 800, fontFamily: "'Syne', sans-serif", color: '#f1f5f9', letterSpacing: '-0.03em' }}>Intelligence Dashboard</h1>
                 <p style={{ fontSize: 13, color: '#64748b', marginTop: 6 }}>Real-time HR analytics for <span style={{ color: '#10b981', fontWeight: 700 }}>{currentOrg}</span></p>
               </div>
-              <div style={{ display: 'flex', gap: 12 }}>
+              <div className="page-title-actions">
                 <button onClick={() => setActiveModal('leave')} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '10px 18px', fontSize: 13, fontWeight: 600, color: '#cbd5e1', cursor: 'pointer', transition: 'all 0.2s' }}>
                   <Calendar size={14} color="#64748b" /> Request PTO
                 </button>
@@ -300,7 +300,7 @@ export default function Hrms() {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 18, animation: 'fadeUp 0.4s ease' }}>
+            <div className="kpi-grid-3" style={{ animation: 'fadeUp 0.4s ease' }}>
               {[
                 { label: 'Total Headcount', value: totalHeadcount, sub: 'Total active in database', isLive: true },
                 { label: 'Active Today', value: activeToday, sub: '94% attendance rate', up: true, diff: '5%' },
@@ -321,7 +321,7 @@ export default function Hrms() {
               ))}
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, animation: 'fadeUp 0.45s ease' }}>
+            <div className="section-grid-2" style={{ animation: 'fadeUp 0.45s ease' }}>
               <div style={{ background: 'linear-gradient(135deg, #1a2234, #0f172a)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 20, padding: 24 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
                   <h3 style={{ fontSize: 15, fontWeight: 700, color: '#f1f5f9', fontFamily: "'Syne', sans-serif" }}>Workforce Composition (Live)</h3>
