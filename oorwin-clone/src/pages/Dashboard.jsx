@@ -3,7 +3,7 @@ import api from "../api";
 import { AuthContext } from "../context/AuthContext";
 import Sidebar from "../components/Sidebar";
 import {
-  UploadCloud, Search, Target, PlusCircle, Sparkles, X,
+  UploadCloud, Search, Target, PlusCircle, Sparkles, X, Menu,
   RefreshCw, Bell, ChevronDown, Calendar, Zap, BarChart2,
   Users, LogOut, Briefcase, Building2, UserCheck, CheckCircle2,
   ArrowUpRight, Activity, FileText, Star, TrendingUp, AlertCircle
@@ -52,6 +52,7 @@ const ChartTooltip = ({ active, payload, label }) => {
 export default function Dashboard() {
   const { user } = useContext(AuthContext);
   const [page, setPage]                     = useState("dashboard");
+  const [isSidebarOpen, setIsSidebarOpen]   = useState(false);
   const [candidates, setCandidates]         = useState([]);
   const [jobs, setJobs]                     = useState(() => {
     const saved = localStorage.getItem('oorwin_jobs');
@@ -155,7 +156,7 @@ export default function Dashboard() {
   ];
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", background: "#080e1a", fontFamily: "'DM Sans', sans-serif", color: "#f1f5f9", overflowX: "hidden" }}>
+    <div style={{ height: "100vh", display: "flex", background: "#080e1a", fontFamily: "'DM Sans', sans-serif", color: "#f1f5f9", overflow: "hidden" }}>
       {/* Global CSS handled in index.css */}
 
       {toast && (
@@ -191,12 +192,15 @@ export default function Dashboard() {
       )}
 
       {/* Global Sidebar Integration */}
-      <Sidebar />
+      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-      <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
+      <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden", position:"relative" }}>
         
-        <header style={{ height:58, borderBottom:"1px solid rgba(255,255,255,.05)", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 26px", background:"rgba(8,14,26,.96)", backdropFilter:"blur(20px)", position:"sticky", top:0, zIndex:50, flexShrink:0 }}>
-          <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+        <header className="app-header">
+          <div className="app-header-left">
+            <button className="mobile-header-menu" onClick={() => setIsSidebarOpen(true)}>
+              <Menu size={20} />
+            </button>
             <div style={{ position:"relative" }}>
               <button onClick={()=>setShowOrgDrop(v=>!v)} style={{ display:"flex", alignItems:"center", gap:6, background:"rgba(255,255,255,.04)", border:"1px solid rgba(255,255,255,.08)", borderRadius:8, padding:"6px 12px", fontSize:12, fontWeight:600, color:"#94a3b8", cursor:"pointer", transition:"border-color .2s" }}
                 onMouseEnter={e=>e.currentTarget.style.borderColor="rgba(16,185,129,.35)"}
@@ -219,7 +223,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <div className="app-header-right">
             <div style={{ position:"relative" }}>
               <Search size={12} style={{ position:"absolute", left:11, top:"50%", transform:"translateY(-50%)", color:"#475569" }}/>
               <input placeholder="Global search..." value={searchQuery} onChange={e=>setSearchQuery(e.target.value)}
@@ -265,13 +269,13 @@ export default function Dashboard() {
           </div>
         </header>
 
-        <div style={{ flex:1, padding:26, overflowY:"auto" }}>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:24, animation:"fadeUp .4s ease" }}>
+        <div className="scroll-container" style={{ flex:1, padding:26, overflowY:"auto" }}>
+          <div className="page-title-row" style={{ marginBottom:24 }}>
             <div>
               <h1 style={{ fontSize:25, fontWeight:800, fontFamily:"'Syne',sans-serif", color:"#f1f5f9", letterSpacing:"-.03em" }}>Active Recruitment</h1>
               <p style={{ fontSize:13, color:"#475569", marginTop:4 }}>Manage talent pipeline for <span style={{ color:"#10b981", fontWeight:700 }}>{currentOrg}</span></p>
             </div>
-            <div style={{ display:"flex", gap:10 }}>
+            <div className="action-buttons">
               <button onClick={()=>setShowModal(true)} style={{ display:"flex", alignItems:"center", gap:7, background:"rgba(255,255,255,.04)", border:"1px solid rgba(255,255,255,.1)", borderRadius:10, padding:"9px 17px", fontSize:13, fontWeight:700, color:"#cbd5e1", cursor:"pointer" }}>
                 <PlusCircle size={14}/> Post Job
               </button>
@@ -281,11 +285,11 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:14, marginBottom:22 }}>
+          <div className="kpi-grid" style={{ marginBottom:22 }}>
             {kpis.map((k, i) => <KpiCard key={k.label} kpi={k} delay={i * 80}/>)}
           </div>
 
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 330px", gap:18 }}>
+          <div className="main-chart-grid">
             
             <div style={{ background:"linear-gradient(135deg,#1a2234,#0f172a)", border:"1px solid rgba(255,255,255,.06)", borderRadius:20, overflow:"hidden", animation:"fadeUp .5s ease" }}>
               <div style={{ padding:"17px 20px", borderBottom:"1px solid rgba(255,255,255,.05)", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
@@ -374,10 +378,10 @@ export default function Dashboard() {
                     return (
                       <div key={job.id} className="job-hover" style={{ padding:"12px 14px", background:"rgba(255,255,255,.03)", border:"1px solid rgba(255,255,255,.06)", borderRadius:12, flexShrink:0, display:"flex", justifyContent:"space-between", alignItems:"center", cursor:"default" }}>
                         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-                          <div style={{ width:30, height:30, borderRadius:8, background:`${col}18`, border:`1px solid ${col}25`, display:"flex", alignItems:"center", justifyContent:"center" }}><Briefcase size={13} color={col}/></div>
+                          <div style={{ width:30, height:30, borderRadius:8, background:`${col}18`, border:`1px solid ${col}25`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}><Briefcase size={13} color={col}/></div>
                           <div><div style={{ fontSize:12, fontWeight:700, color:"#f1f5f9" }}>{job.title}</div><div style={{ fontSize:10, color:"#475569", marginTop:2 }}>{job.dept} · {job.type}</div></div>
                         </div>
-                        <span style={{ fontSize:10, fontWeight:700, color:col, background:`${col}12`, padding:"3px 8px", borderRadius:6 }}>Open</span>
+                        <span className="hide-on-mobile" style={{ fontSize:10, fontWeight:700, color:col, background:`${col}12`, padding:"3px 8px", borderRadius:6 }}>Open</span>
                       </div>
                     );
                   })}

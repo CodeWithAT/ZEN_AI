@@ -6,7 +6,7 @@ import {
   PlusCircle, Search, X, Bell, ChevronDown, Calendar, Users, TrendingUp,
   DollarSign, Briefcase, Mail, Phone, MapPin, Star, MoreVertical, Activity,
   ArrowUpRight, ArrowDownRight, Filter, Download, Eye, Edit2, Trash2,
-  CheckCircle, Clock, AlertCircle, Zap, BarChart2, Globe, Shield, ChevronRight
+  CheckCircle, Clock, AlertCircle, Zap, BarChart2, Globe, Shield, ChevronRight, Menu
 } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -227,6 +227,7 @@ export default function Crm() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [filterStatus, setFilterStatus] = useState('all');
   const [notification, setNotification] = useState(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => { fetchClients(); }, []);
 
@@ -294,7 +295,7 @@ export default function Crm() {
   const tabs = ['overview', 'clients', 'pipeline', 'activity'];
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', background: '#080e1a', fontFamily: "'DM Sans', 'Segoe UI', sans-serif", color: '#f1f5f9', overflowX: 'hidden' }}>
+    <div style={{ height: '100vh', display: 'flex', background: '#080e1a', fontFamily: "'DM Sans', 'Segoe UI', sans-serif", color: '#f1f5f9', overflow: 'hidden' }}>
       {/* Global CSS handled in index.css */}
 
       {notification && (
@@ -353,23 +354,21 @@ export default function Crm() {
       )}
 
       {/* Global Sidebar Component */}
-      <Sidebar />
+      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
 
-        <header style={{
-          height: 60, borderBottom: '1px solid rgba(255,255,255,0.05)',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '0 28px', background: 'rgba(8,14,26,0.95)', backdropFilter: 'blur(20px)',
-          position: 'sticky', top: 0, zIndex: 50,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+        <header className="app-header">
+          <div className="app-header-left">
+            <button className="mobile-header-menu" onClick={() => setIsSidebarOpen(true)}>
+              <Menu size={20} />
+            </button>
             <div>
               <div style={{ fontSize: 16, fontWeight: 800, color: '#f1f5f9', fontFamily: "'Syne', sans-serif", letterSpacing: '-0.02em' }}>CRM Portal</div>
               <div style={{ fontSize: 10, color: '#475569', marginTop: 1 }}>March 2026 · Main Organization</div>
             </div>
             <div style={{ height: 24, width: 1, background: 'rgba(255,255,255,0.06)' }} />
-            <div style={{ display: 'flex', gap: 4 }}>
+            <div className="crm-tabs">
               {tabs.map(tab => (
                 <button key={tab} onClick={() => setActiveTab(tab)} style={{
                   padding: '5px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600,
@@ -382,7 +381,7 @@ export default function Crm() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div className="app-header-right">
             <div style={{ position: 'relative' }}>
               <Search size={13} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#475569' }} />
               <input type="text" placeholder="Search clients..." value={searchQuery}
@@ -436,7 +435,7 @@ export default function Crm() {
           </div>
         </header>
 
-        <main style={{ flex: 1, padding: '28px 28px', overflowY: 'auto' }}>
+        <main className="scroll-container" style={{ flex: 1, padding: '28px 28px', overflowY: 'auto' }}>
           {activeTab === 'overview' && (
             <div style={{ animation: 'fadeIn 0.4s ease' }}>
               <div style={{ marginBottom: 28 }}>
@@ -444,14 +443,14 @@ export default function Crm() {
                 <p style={{ fontSize: 13, color: '#475569', marginTop: 4 }}>Track performance, revenue, and client relationships</p>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
+              <div className="dashboard-grid" style={{ marginBottom: 24 }}>
                 <StatCard icon={Users} label="Total Clients" value={clients.length} sub={`${activeClients} active`} trend={12} color="#10b981" delay={0} />
                 <StatCard icon={DollarSign} label="Total Revenue" value={Math.floor(totalRevenue / 1000)} sub="thousands USD" trend={18} color="#3b82f6" delay={100} />
                 <StatCard icon={Briefcase} label="Active Deals" value={totalDeals} sub="across all clients" trend={-4} color="#f59e0b" delay={200} />
                 <StatCard icon={TrendingUp} label="Avg Deal Value" value={Math.floor(totalRevenue / Math.max(totalDeals, 1) / 1000)} sub="thousands USD" trend={9} color="#8b5cf6" delay={300} />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 16, marginBottom: 24 }}>
+              <div className="chart-grid" style={{ marginBottom: 24 }}>
                 <div style={{ background: 'linear-gradient(135deg, #1a2234, #0f172a)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 20, padding: 24 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
                     <div>
@@ -518,7 +517,7 @@ export default function Crm() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 16 }}>
+              <div className="chart-grid">
                 <div style={{ background: 'linear-gradient(135deg, #1a2234, #0f172a)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 20, padding: 24 }}>
                   <div style={{ fontSize: 11, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Monthly Deals Closed</div>
                   <div style={{ fontSize: 16, fontWeight: 800, color: '#f1f5f9', fontFamily: "'Syne', sans-serif", marginBottom: 20 }}>Deal Velocity</div>
@@ -565,12 +564,12 @@ export default function Crm() {
 
           {activeTab === 'clients' && (
             <div style={{ animation: 'fadeIn 0.4s ease' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+              <div className="card-header" style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <h1 style={{ fontSize: 26, fontWeight: 800, color: '#f1f5f9', fontFamily: "'Syne', sans-serif", letterSpacing: '-0.03em' }}>Client Directory</h1>
                   <p style={{ fontSize: 13, color: '#475569', marginTop: 4 }}>{filtered.length} of {clients.length} clients shown</p>
                 </div>
-                <div style={{ display: 'flex', gap: 10 }}>
+                <div className="filter-group" style={{ display: 'flex', gap: 10 }}>
                   {['all', 'active', 'prospect', 'inactive'].map(f => (
                     <button key={f} onClick={() => setFilterStatus(f)} style={{
                       padding: '6px 14px', borderRadius: 8, fontSize: 11, fontWeight: 700,
@@ -589,7 +588,7 @@ export default function Crm() {
                   <p style={{ fontSize: 12, marginTop: 6 }}>Try adjusting your search or filters</p>
                 </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+                <div className="dashboard-grid">
                   {filtered.map((client, i) => (
                     <ClientCard key={client.id} client={client} index={i} onDelete={handleDelete} />
                   ))}
@@ -605,7 +604,7 @@ export default function Crm() {
                 <p style={{ fontSize: 13, color: '#475569', marginTop: 4 }}>Track deals from lead to close</p>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, marginBottom: 28 }}>
+              <div className="kpi-grid" style={{ marginBottom: 28 }}>
                 {PIPELINE_DATA.map((stage, i) => {
                   const stageColors = ['#64748b', '#3b82f6', '#f59e0b', '#ec4899', '#10b981'];
                   const color = stageColors[i];
@@ -655,7 +654,7 @@ export default function Crm() {
                 <p style={{ fontSize: 13, color: '#475569', marginTop: 4 }}>All team interactions and updates</p>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 16 }}>
+              <div className="chart-grid">
                 <div style={{ background: 'linear-gradient(135deg, #1a2234, #0f172a)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 20, padding: 24 }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#f1f5f9', marginBottom: 20 }}>Timeline</div>
                   <div style={{ position: 'relative' }}>

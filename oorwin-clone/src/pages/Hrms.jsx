@@ -3,7 +3,7 @@ import api from '../api';
 import Sidebar from '../components/Sidebar';
 import { AuthContext } from '../context/AuthContext';
 import { 
-  Search, ChevronDown, Download, UserCheck, Bell, MessageSquare, Calendar, SlidersHorizontal, ArrowUpRight, ArrowDownRight, MoreHorizontal, X, Loader2, Building, CheckCircle2 
+  Search, ChevronDown, Download, UserCheck, Bell, MessageSquare, Calendar, SlidersHorizontal, ArrowUpRight, ArrowDownRight, MoreHorizontal, X, Loader2, Building, CheckCircle2, Menu 
 } from 'lucide-react';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
@@ -17,6 +17,7 @@ export default function Hrms() {
   const [showOrgDropdown, setShowOrgDropdown] = useState(false);
   const [activeModal, setActiveModal] = useState(null); // 'message', 'meeting', or null
   const [heatmapData, setHeatmapData] = useState([]);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const currentDate = new Date();
   const currentMonthName = currentDate.toLocaleString('default', { month: 'short' });
@@ -120,7 +121,7 @@ export default function Hrms() {
   const getColor = (val) => { if (val >= 95) return '#10b981'; if (val >= 90) return '#34d399'; if (val >= 85) return '#fcd34d'; return '#ef4444'; };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', background: '#080e1a', fontFamily: "'DM Sans', 'Segoe UI', sans-serif", color: '#f1f5f9', overflowX: 'hidden' }}>
+    <div style={{ height: '100vh', display: 'flex', background: '#080e1a', fontFamily: "'DM Sans', 'Segoe UI', sans-serif", color: '#f1f5f9', overflow: 'hidden' }}>
       {/* Global CSS handled in index.css */}
 
       {activeModal && (
@@ -161,11 +162,14 @@ export default function Hrms() {
       )}
 
       {/* Global Sidebar Component */}
-      <Sidebar />
+      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <header style={{ height: 62, borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 28px', background: 'rgba(8,14,26,0.95)', backdropFilter: 'blur(20px)', position: 'sticky', top: 0, zIndex: 50, flexShrink: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
+        <header className="app-header">
+          <div className="app-header-left">
+            <button className="mobile-header-menu" onClick={() => setIsSidebarOpen(true)}>
+              <Menu size={20} />
+            </button>
             <div style={{ position: 'relative' }}>
               <button onClick={() => setShowOrgDropdown(!showOrgDropdown)} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '8px 14px', fontSize: 12, fontWeight: 600, color: '#cbd5e1', cursor: 'pointer' }}>
                 {currentOrg} <ChevronDown size={12} />
@@ -185,7 +189,7 @@ export default function Hrms() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div className="app-header-right">
             <div style={{ position: 'relative' }}>
               <Search size={13} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#475569' }} />
               <input type="text" placeholder="Search employees..." style={{ width: 240, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '8px 14px 8px 36px', fontSize: 12, color: '#f1f5f9', outline: 'none' }} />
@@ -226,15 +230,15 @@ export default function Hrms() {
           </div>
         </header>
 
-        <div style={{ flex: 1, padding: 28, overflowY: 'auto' }}>
+        <div className="scroll-container" style={{ flex: 1, padding: 28, overflowY: 'auto' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 1600, margin: '0 auto' }}>
             
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', animation: 'fadeUp 0.3s ease' }}>
+            <div className="page-title-row">
               <div>
                 <h1 style={{ fontSize: 26, fontWeight: 800, fontFamily: "'Syne', sans-serif", color: '#f1f5f9', letterSpacing: '-0.03em' }}>Intelligence Dashboard</h1>
                 <p style={{ fontSize: 13, color: '#64748b', marginTop: 6 }}>Real-time HR analytics for <span style={{ color: '#10b981', fontWeight: 700 }}>{currentOrg}</span></p>
               </div>
-              <div style={{ display: 'flex', gap: 12 }}>
+              <div className="action-buttons">
                 <button onClick={() => setActiveModal('message')} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '10px 18px', fontSize: 13, fontWeight: 600, color: '#cbd5e1', cursor: 'pointer', transition: 'all 0.2s' }}>
                   <MessageSquare size={14} color="#64748b" /> Unified message
                 </button>
@@ -244,7 +248,7 @@ export default function Hrms() {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 18, animation: 'fadeUp 0.4s ease' }}>
+            <div className="hrms-top-grid" style={{ animation: 'fadeUp 0.4s ease' }}>
               {[
                 { label: 'Total Headcount', value: totalHeadcount, sub: 'Total active in database', isLive: true },
                 { label: 'Active Today', value: activeToday, sub: '94% attendance rate', up: true, diff: '5%' },
@@ -265,7 +269,7 @@ export default function Hrms() {
               ))}
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, animation: 'fadeUp 0.45s ease' }}>
+            <div className="chart-grid" style={{ animation: 'fadeUp 0.45s ease' }}>
               <div style={{ background: 'linear-gradient(135deg, #1a2234, #0f172a)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 20, padding: 24 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
                   <h3 style={{ fontSize: 15, fontWeight: 700, color: '#f1f5f9', fontFamily: "'Syne', sans-serif" }}>Workforce Composition (Live)</h3>
@@ -338,12 +342,12 @@ export default function Hrms() {
             </div>
 
             <div style={{ background: 'linear-gradient(135deg, #1a2234, #0f172a)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 20, overflow: 'hidden', animation: 'fadeUp 0.55s ease' }}>
-              <div style={{ padding: '24px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div className="card-header" style={{ padding: '24px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
                   <h3 style={{ fontSize: 15, fontWeight: 700, color: '#f1f5f9', fontFamily: "'Syne', sans-serif" }}>Employee Directory</h3>
                   <p style={{ fontSize: 11, color: '#475569', marginTop: 4 }}>Showing {currentEmployees.length} of {filteredEmployees.length} matching records</p>
                 </div>
-                <div style={{ display: 'flex', gap: 12 }}>
+                <div className="filter-group" style={{ display: 'flex', gap: 12 }}>
                   <div style={{ position: 'relative' }}>
                     <Search size={13} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#475569' }} />
                     <input type="text" placeholder="Search name, role..." value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }} style={{ width: 220, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '8px 12px 8px 34px', fontSize: 12, color: '#f1f5f9', outline: 'none' }} />
