@@ -12,7 +12,26 @@ import {
 const app = express();
 
 // Middleware
-app.use(cors());
+const allowedOrigins = [
+  'http://localhost:5173',   // Vite dev server
+  'http://localhost:3000',   // CRA fallback
+  'http://localhost:8080',   // Same port (browser direct access)
+  process.env.FRONTEND_URL,  // Production URL from env
+].filter(Boolean) as string[];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (curl, Postman, server-to-server)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS: origin ${origin} not allowed`));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 app.use(express.json());
 
 // Routes
@@ -37,8 +56,8 @@ app.get('/', (req, res) => {
   res.send('🚀 Master API Engine is running!');
 });
 
-// Render requires listening on 0.0.0.0
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => {
+// Render (production) uses PORT env var; local dev defaults to 5000
+const PORT = process.env.PORT || 5000;
+app.listen(Number(PORT), '0.0.0.0', () => {
   console.log(`🚀 Server is live on port ${PORT}`);
 });
