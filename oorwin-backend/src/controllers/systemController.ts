@@ -73,3 +73,68 @@ export const deleteClient = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Failed to delete client" });
   }
 };
+
+export const updateClientStage = async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id as string;
+    const { stage, order } = req.body;
+    
+    const updatedClient = await prisma.client.update({
+      where: { id },
+      data: { 
+        ...(stage !== undefined && { stage }), 
+        ...(order !== undefined && { order }) 
+      }
+    });
+    
+    res.json({ success: true, data: updatedClient });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || "Failed to update client stage" });
+  }
+};
+
+export const getLeaveRequests = async (req: Request, res: Response) => {
+  try {
+    const leaveRequests = await prisma.leaveRequest.findMany({
+      include: { employee: true },
+      orderBy: { appliedAt: 'desc' }
+    });
+    res.json({ success: true, data: leaveRequests });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch leave requests" });
+  }
+};
+
+export const createLeaveRequest = async (req: Request, res: Response) => {
+  try {
+    const { employeeId, type, startDate, endDate, reason } = req.body;
+    
+    const request = await prisma.leaveRequest.create({
+      data: {
+        employeeId,
+        type,
+        startDate: new Date(startDate),
+        endDate: new Date(endDate),
+        reason
+      }
+    });
+    res.status(201).json({ success: true, data: request });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || "Failed to create leave request" });
+  }
+};
+
+export const updateLeaveRequestStatus = async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id as string;
+    const { status } = req.body;
+    
+    const request = await prisma.leaveRequest.update({
+      where: { id },
+      data: { status }
+    });
+    res.json({ success: true, data: request });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || "Failed to update leave request status" });
+  }
+};

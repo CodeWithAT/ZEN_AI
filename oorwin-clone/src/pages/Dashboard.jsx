@@ -195,8 +195,8 @@ export default function Dashboard() {
 
       <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
         
-        <header style={{ height:58, borderBottom:"1px solid rgba(255,255,255,.05)", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 26px", background:"rgba(8,14,26,.96)", backdropFilter:"blur(20px)", position:"sticky", top:0, zIndex:50, flexShrink:0 }}>
-          <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+        <header className="responsive-app-header" style={{ height:58, borderBottom:"1px solid rgba(255,255,255,.05)", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 26px", background:"rgba(8,14,26,.96)", backdropFilter:"blur(20px)", position:"sticky", top:0, zIndex:50, flexShrink:0 }}>
+          <div className="responsive-app-header-left" style={{ display:"flex", alignItems:"center", gap:12 }}>
             <div style={{ position:"relative" }}>
               <button onClick={()=>setShowOrgDrop(v=>!v)} style={{ display:"flex", alignItems:"center", gap:6, background:"rgba(255,255,255,.04)", border:"1px solid rgba(255,255,255,.08)", borderRadius:8, padding:"6px 12px", fontSize:12, fontWeight:600, color:"#94a3b8", cursor:"pointer", transition:"border-color .2s" }}
                 onMouseEnter={e=>e.currentTarget.style.borderColor="rgba(16,185,129,.35)"}
@@ -219,7 +219,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <div className="responsive-app-header-right" style={{ display:"flex", alignItems:"center", gap:10 }}>
             <div style={{ position:"relative" }}>
               <Search size={12} style={{ position:"absolute", left:11, top:"50%", transform:"translateY(-50%)", color:"#475569" }}/>
               <input placeholder="Global search..." value={searchQuery} onChange={e=>setSearchQuery(e.target.value)}
@@ -265,13 +265,13 @@ export default function Dashboard() {
           </div>
         </header>
 
-        <div style={{ flex:1, padding:26, overflowY:"auto" }}>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:24, animation:"fadeUp .4s ease" }}>
+        <div className="responsive-scroll-container" style={{ flex:1, padding:26, overflowY:"auto" }}>
+          <div className="responsive-page-title-row" style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:24, animation:"fadeUp .4s ease" }}>
             <div>
               <h1 style={{ fontSize:25, fontWeight:800, fontFamily:"'Syne',sans-serif", color:"#f1f5f9", letterSpacing:"-.03em" }}>Active Recruitment</h1>
               <p style={{ fontSize:13, color:"#475569", marginTop:4 }}>Manage talent pipeline for <span style={{ color:"#10b981", fontWeight:700 }}>{currentOrg}</span></p>
             </div>
-            <div style={{ display:"flex", gap:10 }}>
+            <div className="responsive-action-buttons" style={{ display:"flex", gap:10 }}>
               <button onClick={()=>setShowModal(true)} style={{ display:"flex", alignItems:"center", gap:7, background:"rgba(255,255,255,.04)", border:"1px solid rgba(255,255,255,.1)", borderRadius:10, padding:"9px 17px", fontSize:13, fontWeight:700, color:"#cbd5e1", cursor:"pointer" }}>
                 <PlusCircle size={14}/> Post Job
               </button>
@@ -281,16 +281,16 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:14, marginBottom:22 }}>
+          <div className="responsive-grid-4" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:14, marginBottom:22 }}>
             {kpis.map((k, i) => <KpiCard key={k.label} kpi={k} delay={i * 80}/>)}
           </div>
 
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 330px", gap:18 }}>
+          <div className="responsive-dashboard-content" style={{ display:"grid", gridTemplateColumns:"1fr 330px", gap:18 }}>
             
             <div style={{ background:"linear-gradient(135deg,#1a2234,#0f172a)", border:"1px solid rgba(255,255,255,.06)", borderRadius:20, overflow:"hidden", animation:"fadeUp .5s ease" }}>
-              <div style={{ padding:"17px 20px", borderBottom:"1px solid rgba(255,255,255,.05)", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+              <div className="responsive-card-header" style={{ padding:"17px 20px", borderBottom:"1px solid rgba(255,255,255,.05)", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
                 <div><span style={{ fontSize:14, fontWeight:700, color:"#f1f5f9" }}>Open Applications</span><span style={{ fontSize:11, color:"#475569", marginLeft:10 }}>({filtered.length})</span></div>
-                <div style={{ display:"flex", gap:6 }}>
+                <div className="responsive-filter-group" style={{ display:"flex", gap:6 }}>
                   {["ALL","ACTIVE","INTERVIEW","HIRED"].map(s=>(
                     <button key={s} onClick={()=>setStatusFilter(s)} style={{ padding:"4px 11px", borderRadius:7, fontSize:10, fontWeight:700, background:statusFilter===s?"rgba(16,185,129,.12)":"transparent", border:statusFilter===s?"1px solid rgba(16,185,129,.3)":"1px solid rgba(255,255,255,.06)", color:statusFilter===s?"#10b981":"#475569", cursor:"pointer" }}>
                       {s}

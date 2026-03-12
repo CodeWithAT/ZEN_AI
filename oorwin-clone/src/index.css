@@ -1,7 +1,7 @@
 @import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap');
 
-@theme {
+:root {
   --color-primary-navy: #1a1f3a;
   --color-secondary-purple: #2d1b4e;
   --color-accent-purple: #8B5CF6;
@@ -46,4 +46,89 @@ select option { background: #0f172a; color: #f1f5f9; }
 .pulse, .glow-dot { animation: pulse 2s ease-in-out infinite; }
 .card-hover:hover { transform: translateY(-4px) scale(1.02) !important; border-color: rgba(16,185,129,0.3) !important; }
 .row-hover:hover { background: rgba(255,255,255,0.025) !important; }
-.job-hover:hover { border-color: rgba(16,185,129,.3) !important; background: rgba(16,185,129,.04) !important; }
+.job-hover:hover { border-color: rgba(16,185,129,.3) !important; background: rgba(16,185,129,.04) !important; }
+
+/* ========================================================================= */
+/* PRECISION MOBILE OVERRIDES                                                */
+/* These use !important to safely override inline DOM styles injected by JSX */
+/* ensuring desktop UI remains 100% perfect while mobile perfectly adapts    */
+/* ========================================================================= */
+
+@media (max-width: 768px) {
+  /* Headers & Top Rows */
+  .responsive-app-header {
+    flex-direction: column !important;
+    height: auto !important;
+    padding: 18px !important;
+    gap: 16px !important;
+    align-items: flex-start !important;
+  }
+  .responsive-app-header-left, .responsive-app-header-right {
+    width: 100% !important;
+    justify-content: space-between !important;
+  }
+  .responsive-app-header-right input {
+    width: 100% !important;
+  }
+
+  /* Structural Content Areas */
+  .responsive-scroll-container {
+    padding: 16px !important;
+  }
+  .responsive-page-title-row {
+    flex-direction: column !important;
+    gap: 16px !important;
+    align-items: flex-start !important;
+    margin-bottom: 20px !important;
+  }
+  
+  /* Filter and Action Groups */
+  .responsive-action-buttons, .responsive-filter-group {
+    width: 100% !important;
+    overflow-x: auto !important;
+    padding-bottom: 8px !important;
+    justify-content: flex-start !important;
+  }
+  
+  /* Cards */
+  .responsive-card-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 16px !important;
+  }
+
+  /* Safely collapse ALL explicit inline grids to 1 column on mobile */
+  [style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* Horizontal inline flex groupings to stack */
+  .responsive-payroll-flex {
+    flex-direction: column !important;
+    gap: 24px !important;
+  }
+  
+  /* Sidebar Drawer Behavior */
+  aside {
+    transform: translateX(-100%);
+    position: fixed !important;
+    z-index: 1000 !important;
+    height: 100vh !important;
+    transition: transform 0.3s ease;
+  }
+  .sidebar-open aside {
+    transform: translateX(0) !important;
+  }
+
+  /* Specific fix for CRM pipeline columns overflow */
+  .crm-pipeline-container {
+    flex-direction: column !important;
+  }
+  .crm-pipeline-column {
+    width: 100% !important;
+    min-width: unset !important;
+    height: auto !important;
+    max-height: 500px !important;
+  }
+}
+

@@ -151,6 +151,7 @@ model Client {
   status      String   @default("LEAD")
   dealValue   Int?
   stage       String?      
+  order       Int      @default(0)
   notes       String?
   companyId   String?      
   company     Company?     @relation(fields: [companyId], references: [id]) 
@@ -224,4 +225,33 @@ model Employee {
   status      String   @default("ONBOARDING") 
   joinDate    DateTime @default(now())
   createdAt   DateTime @default(now())
+
+  leaveRequests   LeaveRequest[]
+  onboardingTasks OnboardingTask[]
+}
+
+model LeaveRequest {
+  id          String   @id @default(uuid())
+  employeeId  String
+  employee    Employee @relation(fields: [employeeId], references: [id])
+  type        String   
+  startDate   DateTime
+  endDate     DateTime
+  reason      String?
+  status      String   @default("PENDING") 
+  appliedAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model OnboardingTask {
+  id          String   @id @default(uuid())
+  employeeId  String
+  employee    Employee @relation(fields: [employeeId], references: [id])
+  taskName    String
+  description String?
+  isCompleted Boolean  @default(false)
+  dueDate     DateTime?
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

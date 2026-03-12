@@ -12,6 +12,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, RadialBarChart, RadialBar, Legend
 } from 'recharts';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
 const REVENUE_DATA = [
   { month: 'Jan', revenue: 45, target: 50, deals: 8 },
@@ -242,9 +243,39 @@ export default function Crm() {
         revenue: c.revenue || Math.floor(Math.random() * 200000) + 30000,
         deals: c.deals || Math.floor(Math.random() * 5) + 1,
         status: (c.status || 'active').toLowerCase(),
+        stage: c.stage || 'Lead',
+        order: c.order || i
       }));
       setClients(enriched);
     } catch (error) { console.error(error); }
+  };
+
+  const onDragEnd = async (result) => {
+    if (!result.destination) return;
+    const { source, destination, draggableId } = result;
+
+    if (source.droppableId === destination.droppableId && source.index === destination.index) return;
+
+    const sourceStage = source.droppableId;
+    const destStage = destination.droppableId;
+
+    let updatedClients = Array.from(clients);
+    const clientIndex = updatedClients.findIndex(c => c.id === draggableId);
+    if (clientIndex === -1) return;
+
+    // Optimistic UI update
+    updatedClients[clientIndex].stage = destStage;
+    
+    // In a full implementation, we would sort by order, remove from source index, insert at destination index, and rewrite all orders.
+    // For now, we'll just update the stage.
+    setClients(updatedClients);
+
+    try {
+      await api.put(`/clients/${draggableId}/stage`, { stage: destStage, order: destination.index });
+    } catch (err) {
+      notify('Failed to move client', 'error');
+      fetchClients(); // Revert on failure
+    }
   };
 
   const notify = (msg, type = 'success') => {
@@ -358,8 +389,8 @@ export default function Crm() {
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
 
-        <header className="app-header">
-          <div className="app-header-left">
+        <header className="responsive-app-header" style={{ height: 62, borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 28px', background: 'rgba(8,14,26,0.95)', backdropFilter: 'blur(20px)', position: 'sticky', top: 0, zIndex: 50, flexShrink: 0 }}>
+          <div className="responsive-app-header-left" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <button className="mobile-header-menu" onClick={() => setIsSidebarOpen(true)}>
               <Menu size={20} />
             </button>
@@ -368,7 +399,7 @@ export default function Crm() {
               <div style={{ fontSize: 10, color: '#475569', marginTop: 1 }}>March 2026 · Main Organization</div>
             </div>
             <div style={{ height: 24, width: 1, background: 'rgba(255,255,255,0.06)' }} />
-            <div className="crm-tabs">
+            <div className="responsive-action-buttons" style={{ display: 'flex', gap: 12 }}>
               {tabs.map(tab => (
                 <button key={tab} onClick={() => setActiveTab(tab)} style={{
                   padding: '5px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600,
@@ -381,7 +412,7 @@ export default function Crm() {
             </div>
           </div>
 
-          <div className="app-header-right">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <div style={{ position: 'relative' }}>
               <Search size={13} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#475569' }} />
               <input type="text" placeholder="Search clients..." value={searchQuery}
@@ -435,7 +466,7 @@ export default function Crm() {
           </div>
         </header>
 
-        <main className="scroll-container" style={{ flex: 1, padding: '28px 28px', overflowY: 'auto' }}>
+        <div className="responsive-scroll-container" style={{ flex: 1, padding: 28, overflowY: 'auto' }}>
           {activeTab === 'overview' && (
             <div style={{ animation: 'fadeIn 0.4s ease' }}>
               <div style={{ marginBottom: 28 }}>
@@ -564,12 +595,12 @@ export default function Crm() {
 
           {activeTab === 'clients' && (
             <div style={{ animation: 'fadeIn 0.4s ease' }}>
-              <div className="card-header" style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div className="responsive-page-title-row" style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', animation: 'fadeUp 0.3s ease' }}>
                 <div>
                   <h1 style={{ fontSize: 26, fontWeight: 800, color: '#f1f5f9', fontFamily: "'Syne', sans-serif", letterSpacing: '-0.03em' }}>Client Directory</h1>
                   <p style={{ fontSize: 13, color: '#475569', marginTop: 4 }}>{filtered.length} of {clients.length} clients shown</p>
                 </div>
-                <div className="filter-group" style={{ display: 'flex', gap: 10 }}>
+                <div className="responsive-filter-group" style={{ display: 'flex', gap: 12 }}>
                   {['all', 'active', 'prospect', 'inactive'].map(f => (
                     <button key={f} onClick={() => setFilterStatus(f)} style={{
                       padding: '6px 14px', borderRadius: 8, fontSize: 11, fontWeight: 700,
@@ -601,28 +632,70 @@ export default function Crm() {
             <div style={{ animation: 'fadeIn 0.4s ease' }}>
               <div style={{ marginBottom: 28 }}>
                 <h1 style={{ fontSize: 26, fontWeight: 800, color: '#f1f5f9', fontFamily: "'Syne', sans-serif", letterSpacing: '-0.03em' }}>Sales Pipeline</h1>
-                <p style={{ fontSize: 13, color: '#475569', marginTop: 4 }}>Track deals from lead to close</p>
+                <p style={{ fontSize: 13, color: '#475569', marginTop: 4 }}>Drag and drop deals from lead to close</p>
               </div>
 
-              <div className="kpi-grid" style={{ marginBottom: 28 }}>
-                {PIPELINE_DATA.map((stage, i) => {
-                  const stageColors = ['#64748b', '#3b82f6', '#f59e0b', '#ec4899', '#10b981'];
-                  const color = stageColors[i];
-                  const pct = (stage.count / PIPELINE_DATA[0].count) * 100;
-                  return (
-                    <div key={stage.stage} style={{ background: 'linear-gradient(135deg, #1a2234, #0f172a)', border: `1px solid ${color}25`, borderRadius: 20, padding: 20, transition: 'all 0.3s' }}
-                      onMouseEnter={e => { e.currentTarget.style.borderColor = color + '50'; e.currentTarget.style.transform = 'translateY(-4px)'; }}
-                      onMouseLeave={e => { e.currentTarget.style.borderColor = color + '25'; e.currentTarget.style.transform = 'translateY(0)'; }}>
-                      <div style={{ fontSize: 10, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>{stage.stage}</div>
-                      <div style={{ fontSize: 32, fontWeight: 800, color: color, fontFamily: "'Syne', sans-serif", marginBottom: 4 }}>{stage.count}</div>
-                      <div style={{ fontSize: 11, color: '#475569', marginBottom: 16 }}>${stage.value}k value</div>
-                      <div style={{ height: 4, background: 'rgba(255,255,255,0.05)', borderRadius: 4 }}>
-                        <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: 4, transition: 'width 1s ease' }} />
+              <DragDropContext onDragEnd={onDragEnd}>
+                <div style={{ display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 16 }}>
+                  {['Lead', 'Qualified', 'Proposal', 'Negotiation', 'Closed'].map((stageName, stageIndex) => {
+                    const stageColors = ['#64748b', '#3b82f6', '#f59e0b', '#ec4899', '#10b981'];
+                    const color = stageColors[stageIndex];
+                    const stageClients = clients.filter(c => (c.stage || 'Lead') === stageName).sort((a,b) => (a.order||0) - (b.order||0));
+                    
+                    return (
+                      <div key={stageName} style={{ width: 300, flexShrink: 0, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 16, display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ padding: '16px 20px', borderBottom: `2px solid ${color}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: '#f1f5f9', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{stageName}</span>
+                          <span style={{ background: 'rgba(255,255,255,0.06)', padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>{stageClients.length}</span>
+                        </div>
+                        
+                        <Droppable droppableId={stageName}>
+                          {(provided, snapshot) => (
+                            <div 
+                              ref={provided.innerRef} 
+                              {...provided.droppableProps}
+                              style={{ 
+                                flex: 1, padding: 16, minHeight: 200, transition: 'background 0.2s',
+                                background: snapshot.isDraggingOver ? 'rgba(255,255,255,0.05)' : 'transparent' 
+                              }}
+                            >
+                              {stageClients.map((client, index) => (
+                                <Draggable key={client.id} draggableId={client.id} index={index}>
+                                  {(provided, snapshot) => (
+                                    <div
+                                      ref={provided.innerRef}
+                                      {...provided.draggableProps}
+                                      {...provided.dragHandleProps}
+                                      style={{
+                                        userSelect: 'none',
+                                        padding: 16,
+                                        margin: '0 0 12px 0',
+                                        background: 'linear-gradient(135deg, #1e293b 0%, #162032 100%)',
+                                        border: '1px solid rgba(255,255,255,0.08)',
+                                        borderRadius: 12,
+                                        boxShadow: snapshot.isDragging ? '0 12px 24px rgba(0,0,0,0.5)' : 'none',
+                                        ...provided.draggableProps.style
+                                      }}
+                                    >
+                                      <div style={{ fontSize: 13, fontWeight: 700, color: '#f1f5f9', marginBottom: 4 }}>{client.companyName}</div>
+                                      <div style={{ fontSize: 11, color: '#64748b', marginBottom: 10 }}>{client.contactName}</div>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <StatusBadge status={client.status || 'active'} />
+                                        <span style={{ fontSize: 12, fontWeight: 700, color: color }}>${((client.revenue || 0)/1000).toFixed(0)}k</span>
+                                      </div>
+                                    </div>
+                                  )}
+                                </Draggable>
+                              ))}
+                              {provided.placeholder}
+                            </div>
+                          )}
+                        </Droppable>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    )
+                  })}
+                </div>
+              </DragDropContext>
 
               <div style={{ background: 'linear-gradient(135deg, #1a2234, #0f172a)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 20, padding: 24 }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: '#f1f5f9', marginBottom: 20 }}>Client Revenue Breakdown</div>
@@ -700,7 +773,7 @@ export default function Crm() {
               </div>
             </div>
           )}
-        </main>
+        </div>
       </div>
     </div>
   );
