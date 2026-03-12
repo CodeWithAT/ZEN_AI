@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080/api',
+  baseURL: 'https://zen-ai-backend.onrender.com/api',
 });
 
 // Automatically attach JWT token to every request
